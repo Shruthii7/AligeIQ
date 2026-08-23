@@ -185,6 +185,97 @@
     </div>
 </section>
 
+<section class="financial-insights">
+    <div class="dashboard-heading">
+        <h2>Financial Insights</h2>
+        <p>Key observations based on your spending data.</p>
+    </div>
+
+    <!-- JavaScript will generate insights here -->
+    <div id="insights-list"></div>
+</section>
+
+<section class="budget-section">
+    <div class="dashboard-heading">
+        <h2>Budgets</h2>
+        <p>Set spending limits and track your budget usage.</p>
+    </div>
+
+    <!-- Budget form -->
+    <form id="budget-form">
+        <div class="form-group">
+            <label for="budget-category">Category</label>
+            <input
+                type="text"
+                id="budget-category"
+                placeholder="e.g. Food"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="budget-amount">Monthly Budget</label>
+            <input
+                type="number"
+                id="budget-amount"
+                placeholder="Enter budget amount"
+                min="1"
+                required
+            >
+        </div>
+
+        <button type="submit">Set Budget</button>
+    </form>
+
+    <!-- JavaScript will display budgets here -->
+    <div id="budget-list"></div>
+</section>
+<section class="goals-section">
+    <div class="dashboard-heading">
+        <h2>Financial Goals</h2>
+        <p>Set goals and track your financial progress.</p>
+    </div>
+
+    <!-- Form for creating a financial goal -->
+    <form id="goal-form">
+        <div class="form-group">
+            <label for="goal-name">Goal Name</label>
+            <input
+                type="text"
+                id="goal-name"
+                placeholder="e.g. Emergency Fund"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="goal-target">Target Amount</label>
+            <input
+                type="number"
+                id="goal-target"
+                placeholder="e.g. 100000"
+                min="1"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="goal-saved">Amount Saved</label>
+            <input
+                type="number"
+                id="goal-saved"
+                placeholder="e.g. 25000"
+                min="0"
+                required
+            >
+        </div>
+
+        <button type="submit">Add Goal</button>
+    </form>
+
+    <!-- JavaScript will display goals here -->
+    <div id="goal-list"></div>
+</section>
 </main>
 
     <script src="script.js"></script>

@@ -34,8 +34,72 @@ const transactions = savedTransactions
 let categoryChart;
 let monthlyChart;
 
+// form references
 // Get the transaction form
 const transactionForm = document.getElementById("transaction-form");
+// Get the budget form
+const budgetForm = document.getElementById("budget-form");
+// Get the goal form from HTML
+const goalForm = document.getElementById("goal-form");
+
+// Run when the user submits the goal form
+goalForm.addEventListener("submit", function (event) {
+    // Stop the page from refreshing
+    event.preventDefault();
+
+    // Get values entered by the user
+    const name = document.getElementById("goal-name").value;
+    const target = Number(document.getElementById("goal-target").value);
+    const saved = Number(document.getElementById("goal-saved").value);
+
+    // Create one goal object
+    const newGoal = {
+        name: name,
+        target: target,
+        saved: saved
+    };
+
+    // Add the goal to our goals array
+    goals.push(newGoal);
+
+    // Save goals in the browser
+    localStorage.setItem("goals", JSON.stringify(goals));
+
+    // Refresh the goals shown on the page
+    updateGoalList();
+
+    // Clear the form
+    goalForm.reset();
+});
+
+// Run this when the user submits the budget form
+budgetForm.addEventListener("submit", function (event) {
+    // Stop the page from refreshing
+    event.preventDefault();
+
+    // Get values entered by the user
+    const category = document.getElementById("budget-category").value;
+    const amount = Number(document.getElementById("budget-amount").value);
+
+    // Create a new budget object
+    const newBudget = {
+        category: category,
+        amount: amount
+    };
+
+    // Add the budget to our budgets array
+    budgets.push(newBudget);
+
+    // Save budgets in localStorage
+    localStorage.setItem("budgets", JSON.stringify(budgets));
+
+    // Update the budget display
+    updateBudgetList();
+
+    // Clear the form
+    budgetForm.reset();
+});
+
 
 // Get search and filter controls
 const searchTransaction = document.getElementById("search-transaction");
@@ -91,15 +155,26 @@ if (editingIndex === null) {
     localStorage.setItem("transactions", JSON.stringify(transactions));
 
     // Update everything on the screen
-    updateDashboard();
-    updateTransactionList();
-    updateCategoryAnalysis();
-    updateCategoryChart();
-    updateMonthlyChart();
+   updateDashboard();
+updateTransactionList();
+updateCategoryAnalysis();
+updateCategoryChart();
+updateMonthlyChart();
+updateInsights();
+updateBudgetList();
+updateGoalList();
 
     // Clear the form
     transactionForm.reset();
 });
+
+// Load saved budgets from localStorage
+const savedBudgets = localStorage.getItem("budgets");
+
+// Use saved budgets, or start with an empty array
+const budgets = savedBudgets
+    ? JSON.parse(savedBudgets)
+    : [];
 
 
 // Calculate and update all financial KPIs
@@ -138,6 +213,13 @@ function updateDashboard() {
         `${savingsRate.toFixed(1)}%`;
 }
 
+// Load saved goals from localStorage
+const savedGoals = localStorage.getItem("goals");
+
+// Use saved goals, or start with an empty array
+const goals = savedGoals
+    ? JSON.parse(savedGoals)
+    : [];
 
 // Display transactions on the dashboard
 // Display transactions on the dashboard
@@ -356,6 +438,275 @@ function updateMonthlyChart() {
     });
 }
 
+// Generate useful insights from transaction data
+function updateInsights() {
+    // Store total expenses for each month
+    const monthlyTotals = {};
+
+    // Go through all transactions
+    for (let i = 0; i < transactions.length; i++) {
+        const transaction = transactions[i];
+
+        // Only analyze expenses
+        if (transaction.type === "expense") {
+            // Extract YYYY-MM from the date
+            const month = transaction.date.slice(0, 7);
+
+            // Create the month if needed
+            if (!monthlyTotals[month]) {
+                monthlyTotals[month] = 0;
+            }
+
+            // Add this transaction to the month's spending
+            monthlyTotals[month] += transaction.amount;
+        }
+    }
+
+    // Get all months and sort them chronologically
+    const months = Object.keys(monthlyTotals).sort();
+
+    // Get the insights container
+    const insightsList = document.getElementById("insights-list");
+
+    // Clear old insights
+    insightsList.innerHTML = "";
+
+    // We need at least two months to compare
+    if (months.length < 2) {
+        insightsList.innerHTML = `
+            <div class="insight-item">
+                Add transactions from at least two different months
+                to see spending trends.
+            </div>
+        `;
+        return;
+    }
+
+    // Get the latest month and the month before it
+    const latestMonth = months[months.length - 1];
+    const previousMonth = months[months.length - 2];
+
+    const latestSpending = monthlyTotals[latestMonth];
+    const previousSpending = monthlyTotals[previousMonth];
+
+    // Calculate percentage change
+    const percentageChange =
+        ((latestSpending - previousSpending) / previousSpending) * 100;
+
+    // Decide whether spending increased or decreased
+    const trend =
+        percentageChange > 0 ? "increased" : "decreased";
+
+    // Display the insight
+    insightsList.innerHTML = `
+        <div class="insight-item">
+            Your spending <strong>${trend}</strong> by
+            <strong>${Math.abs(percentageChange).toFixed(1)}%</strong>
+            compared with the previous month.
+        </div>
+    `;
+}
+
+// Display all budgets and calculate their usage
+function updateBudgetList() {
+    // Get the budget display area from HTML
+    const budgetList = document.getElementById("budget-list");
+
+    // Clear the previous display
+    budgetList.innerHTML = "";
+
+    // Go through every budget
+    for (let i = 0; i < budgets.length; i++) {
+        const budget = budgets[i];
+
+        // Start the spent amount at 0
+        let spent = 0;
+
+        // Check every transaction
+        for (let j = 0; j < transactions.length; j++) {
+            const transaction = transactions[j];
+
+            // Add expenses that belong to this budget category
+            if (
+                transaction.type === "expense" &&
+                transaction.category.toLowerCase() ===
+                    budget.category.toLowerCase()
+            ) {
+                spent += transaction.amount;
+            }
+        }
+
+        // Calculate remaining budget
+        const remaining = budget.amount - spent;
+
+        // Calculate percentage used
+        const percentageUsed = (spent / budget.amount) * 100;
+
+        // Keep the progress bar from becoming wider than 100%
+        const progressWidth = Math.min(percentageUsed, 100);
+
+        // Decide whether the budget needs a warning
+let alertMessage = "";
+
+if (percentageUsed >= 100) {
+    alertMessage = "🚨 You have exceeded this budget!";
+} else if (percentageUsed >= 80) {
+    alertMessage = "⚠️ You are close to your budget limit.";
+}
+
+
+        // Add the budget to the page
+        budgetList.innerHTML += `
+            <div class="budget-item">
+               <div class="budget-top">
+    <strong>${budget.category}</strong>
+
+    <div class="budget-actions">
+        <strong>₹${budget.amount.toLocaleString("en-IN")}</strong>
+
+        <button
+            type="button"
+            onclick="deleteBudget(${i})"
+            class="delete-budget-btn"
+        >
+            Delete
+        </button>
+    </div>
+</div>
+
+                <div class="budget-details">
+    Spent: ₹${spent.toLocaleString("en-IN")} ·
+    Remaining: ₹${remaining.toLocaleString("en-IN")} ·
+    ${percentageUsed.toFixed(1)}% used
+</div>
+
+${alertMessage ? `
+    <div class="budget-alert">
+        ${alertMessage}
+    </div>
+` : ""}
+
+                <div class="budget-progress">
+                    <div
+                        class="budget-progress-bar"
+                        style="width: ${progressWidth}%"
+                    ></div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+
+// Delete a budget using its position in the budgets array
+function deleteBudget(index) {
+    // Remove one budget from the array
+    budgets.splice(index, 1);
+
+    // Save the updated budgets array
+    localStorage.setItem("budgets", JSON.stringify(budgets));
+
+    // Refresh the budget display
+    updateBudgetList();
+}
+
+// Display all financial goals
+function updateGoalList() {
+    // Get the container from HTML
+    const goalList = document.getElementById("goal-list");
+
+    // Clear the previous display
+    goalList.innerHTML = "";
+
+    // Go through every goal
+    for (let i = 0; i < goals.length; i++) {
+        const goal = goals[i];
+
+        // Calculate percentage progress
+        const percentage = (goal.saved / goal.target) * 100;
+
+        // Prevent the progress bar from going beyond 100%
+        const progressWidth = Math.min(percentage, 100);
+
+        // Calculate how much is still needed
+        const remaining = Math.max(goal.target - goal.saved, 0);
+
+        // Add the goal to the page
+        goalList.innerHTML += `
+            <div class="goal-item">
+                <div class="goal-top">
+    <strong>${goal.name}</strong>
+
+    <div class="goal-actions">
+        <button
+            type="button"
+            class="add-savings-btn"
+            onclick="addSavings(${i})"
+        >
+            Add Savings
+        </button>
+
+        <button
+            type="button"
+            class="delete-goal-btn"
+            onclick="deleteGoal(${i})"
+        >
+            Delete
+        </button>
+    </div>
+</div>
+
+                <div class="goal-details">
+                    Saved: ₹${goal.saved.toLocaleString("en-IN")} ·
+                    Target: ₹${goal.target.toLocaleString("en-IN")} ·
+                    Remaining: ₹${remaining.toLocaleString("en-IN")} ·
+                    ${percentage.toFixed(1)}% complete
+                </div>
+
+                <div class="goal-progress">
+                    <div
+                        class="goal-progress-bar"
+                        style="width: ${progressWidth}%"
+                    ></div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Delete a goal using its position in the goals array
+function deleteGoal(index) {
+    // Remove one goal from the array
+    goals.splice(index, 1);
+
+    // Save the updated goals
+    localStorage.setItem("goals", JSON.stringify(goals));
+
+    // Refresh the goals on the page
+    updateGoalList();
+}
+
+// Add more money to an existing financial goal
+function addSavings(index) {
+    // Ask the user how much money they want to add
+    const amount = Number(
+        prompt("How much do you want to add to this goal?")
+    );
+
+    // Stop if the user enters an invalid amount
+    if (!amount || amount <= 0) {
+        return;
+    }
+
+    // Add the new savings amount to the goal
+    goals[index].saved += amount;
+
+    // Save the updated goals in localStorage
+    localStorage.setItem("goals", JSON.stringify(goals));
+
+    // Refresh the goals display
+    updateGoalList();
+}
 // Load an existing transaction into the form for editing
 function editTransaction(index) {
     // Get the selected transaction from the array
@@ -391,11 +742,14 @@ function deleteTransaction(index) {
     localStorage.setItem("transactions", JSON.stringify(transactions));
 
     // Refresh KPIs and transaction list
-    updateDashboard();
+updateDashboard();
 updateTransactionList();
 updateCategoryAnalysis();
 updateCategoryChart();
 updateMonthlyChart();
+updateInsights();
+updateBudgetList();
+updateGoalList();
 }
 
 // Display initial data when the page opens
@@ -404,3 +758,6 @@ updateTransactionList();
 updateCategoryAnalysis();
 updateCategoryChart();
 updateMonthlyChart();
+updateInsights();
+updateBudgetList();
+updateGoalList();
