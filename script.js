@@ -230,6 +230,17 @@ function updateTransactionList() {
     // Remove old displayed transactions
     transactionList.innerHTML = "";
 
+    // Show a message when there are no transactions
+if (transactions.length === 0) {
+    transactionList.innerHTML = `
+        <p class="empty-state">
+            No transactions yet. Add your first income or expense below.
+        </p>
+    `;
+
+    return;
+}
+
     // Get the current search text
 const searchText = searchTransaction.value.toLowerCase();
 
@@ -357,6 +368,16 @@ function updateCategoryChart() {
     // Get the canvas from HTML
     const chartCanvas = document.getElementById("category-chart");
 
+    // If there are no expense categories, don't display a chart
+if (labels.length === 0) {
+    if (categoryChart) {
+        categoryChart.destroy();
+        categoryChart = null;
+    }
+
+    return;
+}
+
     // Destroy the old chart before creating a new one
     if (categoryChart) {
         categoryChart.destroy();
@@ -413,6 +434,16 @@ function updateMonthlyChart() {
 
     // Get the chart canvas from HTML
     const chartCanvas = document.getElementById("monthly-chart");
+
+    // If there is no expense data, remove the chart
+if (data.length === 0 || data.every(amount => amount === 0)) {
+    if (monthlyChart) {
+        monthlyChart.destroy();
+        monthlyChart = null;
+    }
+
+    return;
+}
 
     // Remove the old chart before creating an updated one
     if (monthlyChart) {
@@ -472,6 +503,17 @@ function updateInsights() {
     // Clear old insights
     insightsList.innerHTML = "";
 
+    // Show a message when there is no financial data
+if (transactions.length === 0) {
+    insightsList.innerHTML = `
+        <p class="empty-state">
+            Add some transactions to receive personalized financial insights.
+        </p>
+    `;
+
+    return;
+}
+
     // We need at least two months to compare
     if (months.length < 2) {
         insightsList.innerHTML = `
@@ -514,7 +556,18 @@ function updateBudgetList() {
     const budgetList = document.getElementById("budget-list");
 
     // Clear the previous display
-    budgetList.innerHTML = "";
+   budgetList.innerHTML = "";
+
+// Show a message when no budgets exist
+if (budgets.length === 0) {
+    budgetList.innerHTML = `
+        <p class="empty-state">
+            No budgets yet. Set your first spending limit above.
+        </p>
+    `;
+
+    return;
+}
 
     // Go through every budget
     for (let i = 0; i < budgets.length; i++) {
@@ -541,7 +594,8 @@ function updateBudgetList() {
         const remaining = budget.amount - spent;
 
         // Calculate percentage used
-        const percentageUsed = (spent / budget.amount) * 100;
+        const percentage =
+    budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
 
         // Keep the progress bar from becoming wider than 100%
         const progressWidth = Math.min(percentageUsed, 100);
@@ -619,12 +673,24 @@ function updateGoalList() {
     // Clear the previous display
     goalList.innerHTML = "";
 
+    // Show a message when no goals exist
+if (goals.length === 0) {
+    goalList.innerHTML = `
+        <p class="empty-state">
+            No financial goals yet. Add your first goal above.
+        </p>
+    `;
+
+    return;
+}
+
     // Go through every goal
     for (let i = 0; i < goals.length; i++) {
         const goal = goals[i];
 
         // Calculate percentage progress
-        const percentage = (goal.saved / goal.target) * 100;
+        const percentage =
+    goal.target > 0 ? (goal.saved / goal.target) * 100 : 0;
 
         // Prevent the progress bar from going beyond 100%
         const progressWidth = Math.min(percentage, 100);
