@@ -114,8 +114,7 @@ filterType.addEventListener("change", updateTransactionList);
 let editingIndex = null;
 
 
-// Run when the user submits the form
-transactionForm.addEventListener("submit", function (event) {
+transactionForm.addEventListener("submit", async function (event) {
     // Prevent the page from refreshing
     event.preventDefault();
 
@@ -126,7 +125,7 @@ transactionForm.addEventListener("submit", function (event) {
     const date = document.getElementById("date").value;
     const type = document.getElementById("type").value;
 
-    // Create one new transaction object
+    // Create the new transaction object
     const newTransaction = {
         description: description,
         category: category,
@@ -135,37 +134,52 @@ transactionForm.addEventListener("submit", function (event) {
         type: type
     };
 
-    // Check whether we are adding or editing
-if (editingIndex === null) {
-    // No transaction is being edited, so add a new one
-    transactions.push(newTransaction);
-} else {
-    // Replace the existing transaction with the updated data
-    transactions[editingIndex] = newTransaction;
+    try {
+        // Send the transaction to the backend
+        const response = await fetch(
+            "http://localhost:3000/api/transactions",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(newTransaction)
+            }
+        );
 
-    // Leave edit mode
-    editingIndex = null;
+        // Check whether the backend accepted it
+        if (!response.ok) {
+            throw new Error("Could not save transaction");
+        }
 
-    // Change the button back to its normal text
-    document.querySelector("#transaction-form button").textContent =
-        "Add Transaction";
-}
+        // Get the saved transaction from the backend
+        const savedTransaction = await response.json();
 
-    // Save the complete updated dataset in LocalStorage
-    localStorage.setItem("transactions", JSON.stringify(transactions));
+        // Add it to the frontend array
+        transactions.push(savedTransaction);
 
-    // Update everything on the screen
-   updateDashboard();
-updateTransactionList();
-updateCategoryAnalysis();
-updateCategoryChart();
-updateMonthlyChart();
-updateInsights();
-updateBudgetList();
-updateGoalList();
+        // Update EVERYTHING that depends on transactions
+        updateDashboard();
+        updateTransactionList();
+        updateCategoryAnalysis();
+        updateCategoryChart();
+        updateMonthlyChart();
+        updateInsights();
+        updateBudgetList();
+        updateGoalList();
 
-    // Clear the form
-    transactionForm.reset();
+        // Clear the form
+        transactionForm.reset();
+
+        console.log(
+            "Transaction successfully saved:",
+            savedTransaction
+        );
+
+    } catch (error) {
+        console.error("Error saving transaction:", error);
+        alert("Transaction could not be saved. Make sure the backend server is running.");
+    }
 });
 
 // Load saved budgets from localStorage
@@ -774,60 +788,139 @@ function addSavings(index) {
     // Refresh the goals display
     updateGoalList();
 }
-// Load an existing transaction into the form for editing
-function editTransaction(index) {
-    // Get the selected transaction from the array
-    const transaction = transactions[index];
+async function editTransaction(id) {
+    // Find the transaction we want to edit
+    const transaction = transactions.find(
+        transaction => transaction.id === id
+    );
 
-    // Put its existing values into the form
-    document.getElementById("description").value = transaction.description;
-    document.getElementById("category").value = transaction.category;
-    document.getElementById("amount").value = transaction.amount;
-    document.getElementById("date").value = transaction.date;
-    document.getElementById("type").value = transaction.type;
+    // Stop if it doesn't exist
+    if (!transaction) {
+        return;
+    }
 
-    // Remember which transaction we are editing
-    editingIndex = index;
+    // Ask the user for updated values
+    const description = prompt(
+        "Description:",
+        transaction.description
+    );
 
-    // Change the button text to make the mode clear
-    document.querySelector("#transaction-form button").textContent =
-        "Update Transaction";
+    const category = prompt(
+        "Category:",
+        transaction.category
+    );
 
-    // Move the user to the form
-    document.querySelector(".add-transaction").scrollIntoView({
-        behavior: "smooth"
-    });
+    const amount = prompt(
+        "Amount:",
+        transaction.amount
+    );
+
+    // Stop if the user cancels
+    if (description === null || category === null || amount === null) {
+        return;
+    }
+
+    // Create the updated transaction
+    const updatedTransaction = {
+        description: description,
+        category: category,
+        amount: Number(amount),
+        date: transaction.date,
+        type: transaction.type
+    };
+
+    try {
+        // Send the updated transaction to the backend
+        const response = await fetch(
+            `http://localhost:3000/api/transactions/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(updatedTransaction)
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not update transaction");
+        }
+
+        // Get the updated transaction back from the backend
+        const savedTransaction = await response.json();
+
+        // Find it in the frontend array
+        const transactionIndex = transactions.findIndex(
+            transaction => transaction.id === id
+        );
+
+        // Replace the old transaction with the backend version
+        if (transactionIndex !== -1) {
+            transactions[transactionIndex] = savedTransaction;
+        }
+
+        // Refresh everything
+        updateDashboard();
+        updateTransactionList();
+        updateCategoryAnalysis();
+        updateCategoryChart();
+        updateMonthlyChart();
+        updateInsights();
+        updateBudgetList();
+        updateGoalList();
+
+        console.log("Transaction updated successfully");
+
+    } catch (error) {
+        console.error("Error updating transaction:", error);
+        alert("Could not update transaction.");
+    }
 }
 
 
-// Delete transaction 
-function deleteTransaction(index) {
-    // Remove 1 transaction from the specified array position
-    transactions.splice(index, 1);
+async function deleteTransaction(id) {
+    try {
+        // Ask the backend to delete this transaction
+        const response = await fetch(
+            `http://localhost:3000/api/transactions/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
 
-    // Save the updated data
-    localStorage.setItem("transactions", JSON.stringify(transactions));
+        // Stop if deletion failed
+        if (!response.ok) {
+            throw new Error("Could not delete transaction");
+        }
 
-    // Refresh KPIs and transaction list
-updateDashboard();
-updateTransactionList();
-updateCategoryAnalysis();
-updateCategoryChart();
-updateMonthlyChart();
-updateInsights();
-updateBudgetList();
-updateGoalList();
+        // Find the transaction in the frontend array
+        const transactionIndex = transactions.findIndex(
+            transaction => transaction.id === id
+        );
+
+        // Remove it from the frontend array
+        if (transactionIndex !== -1) {
+            transactions.splice(transactionIndex, 1);
+        }
+
+        // Refresh everything
+        updateDashboard();
+        updateTransactionList();
+        updateCategoryAnalysis();
+        updateCategoryChart();
+        updateMonthlyChart();
+        updateInsights();
+        updateBudgetList();
+        updateGoalList();
+
+        console.log("Transaction deleted successfully");
+
+    } catch (error) {
+        console.error("Error deleting transaction:", error);
+        alert("Could not delete transaction.");
+    }
 }
 
-// Display initial data when the page opens
-updateDashboard();
-updateTransactionList();
-updateCategoryAnalysis();
-updateCategoryChart();
-updateMonthlyChart();
-updateInsights();
-updateBudgetList();
-updateGoalList();
 
 
 // Get all navigation links
@@ -893,3 +986,51 @@ viewAllButton.addEventListener("click", function () {
     // Refresh the complete transaction list
     updateTransactionList();
 });
+
+// Load all transactions from the backend when the page opens
+async function loadTransactions() {
+    try {
+        // Ask the backend for all transactions
+        const response = await fetch(
+            "http://localhost:3000/api/transactions"
+        );
+
+        // Check whether the request worked
+        if (!response.ok) {
+            throw new Error("Could not load transactions");
+        }
+
+        // Get the transactions from the backend
+        const backendTransactions = await response.json();
+
+        // Remove the old frontend data
+        transactions.length = 0;
+
+        // Add backend transactions to the frontend array
+        transactions.push(...backendTransactions);
+
+        // Update the whole dashboard
+        updateDashboard();
+        updateTransactionList();
+        updateCategoryAnalysis();
+        updateCategoryChart();
+        updateMonthlyChart();
+        updateInsights();
+        updateBudgetList();
+        updateGoalList();
+
+        console.log(
+            "Transactions loaded from backend:",
+            transactions
+        );
+
+    } catch (error) {
+        console.error("Error loading transactions:", error);
+        alert(
+            "Could not load data. Make sure the backend server is running."
+        );
+    }
+}
+
+// Load backend data when AligeIQ opens
+loadTransactions();

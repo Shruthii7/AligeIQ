@@ -1,0 +1,25 @@
+{
+  "name": "aligeiq",
+  "version": "1.0.0",
+  "description": "A personal finance intelligence web application that helps users track transactions, monitor budgets, manage financial goals, and understand their spending through interactive analytics.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shruthii7/AligeIQ.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Shruthii7/AligeIQ/issues"
+  },
+  "homepage": "https://github.com/Shruthii7/AligeIQ#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
