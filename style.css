@@ -513,3 +513,26 @@ nav a.active {
     font-weight: 600;
     cursor: pointer;
 }
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Add clear separation between major sections */
+.budgets-section,
+.goals-section {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+/* Give the budget list some breathing room */
+#budget-list {
+    margin-top: 24px;
+}
+
+/* Add space around each budget item */
+.budget-item {
+    padding: 20px 0;
+}

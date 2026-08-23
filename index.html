@@ -20,16 +20,16 @@
 
 <!-- Navigation menu with links to different sections of the application -->
     <nav>
-        <a href="#" class="active">Dashboard</a>
-        <a href="#">Transactions</a>
-        <a href="#">Budgets</a>
-        <a href="#">Goals</a>
-        <a href="#">Insights</a>
+    <a href="#dashboard" class="active">Dashboard</a>
+    <a href="#transactions">Transactions</a>
+    <a href="#budgets">Budgets</a>
+    <a href="#goals">Goals</a>
+    <a href="#insights">Insights</a>
     </nav>
     </header>
 
     <main>
-    <section class="dashboard">
+    <section class="dashboard" id="dashboard">
         <div class="dashboard-heading">
             <h2>Financial Overview</h2>
             <p>Your financial snapshot at a glance.</p>
@@ -58,14 +58,14 @@
                 </div>
     </section>
 
-    <section class="recent-transactions">
+    <section class="recent-transactions" id="transactions">
         <div class="section-heading">
             <div>
                 <h2>Recent Transactions</h2>
                 <p>A quick look at your latest financial activity.</p>
             </div>
 
-            <button type="button">View All</button>
+            <button type="button" id="view-all-button">View All</button>
         </div>
 
         <div class="transaction-list" id="transaction-list"></div>
@@ -185,7 +185,7 @@
     </div>
 </section>
 
-<section class="financial-insights">
+<section class="financial-insights" id="insights">
     <div class="dashboard-heading">
         <h2>Financial Insights</h2>
         <p>Key observations based on your spending data.</p>
@@ -195,7 +195,7 @@
     <div id="insights-list"></div>
 </section>
 
-<section class="budget-section">
+<section class="budgets-section" id="budgets">
     <div class="dashboard-heading">
         <h2>Budgets</h2>
         <p>Set spending limits and track your budget usage.</p>
@@ -230,7 +230,8 @@
     <!-- JavaScript will display budgets here -->
     <div id="budget-list"></div>
 </section>
-<section class="goals-section">
+
+<section class="goals-section" id="goals">
     <div class="dashboard-heading">
         <h2>Financial Goals</h2>
         <p>Set goals and track your financial progress.</p>

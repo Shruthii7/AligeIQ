@@ -171,18 +171,12 @@ updateGoalList();
 // Load saved budgets from localStorage
 const savedBudgets = localStorage.getItem("budgets");
 
-// Use saved budgets, or start with an empty array
-const budgets = savedBudgets
-    ? JSON.parse(savedBudgets)
-    : [];
-
-
 // Calculate and update all financial KPIs
 function updateDashboard() {
     let totalIncome = 0;
     let totalExpenses = 0;
 
-    // Analyze every transaction
+    // Check every transaction
     for (let i = 0; i < transactions.length; i++) {
         if (transactions[i].type === "income") {
             totalIncome += transactions[i].amount;
@@ -191,15 +185,16 @@ function updateDashboard() {
         }
     }
 
-    // Calculate financial metrics
+    // Calculate remaining balance
     const currentBalance = totalIncome - totalExpenses;
 
+    // Calculate savings rate
     const savingsRate =
         totalIncome > 0
             ? (currentBalance / totalIncome) * 100
             : 0;
 
-    // Display calculated values
+    // Update all dashboard cards
     document.getElementById("total-income").textContent =
         `₹${totalIncome.toLocaleString("en-IN")}`;
 
@@ -212,6 +207,12 @@ function updateDashboard() {
     document.getElementById("savings-rate").textContent =
         `${savingsRate.toFixed(1)}%`;
 }
+
+// Use saved budgets, or start with an empty array
+const budgets = savedBudgets
+    ? JSON.parse(savedBudgets)
+    : [];
+
 
 // Load saved goals from localStorage
 const savedGoals = localStorage.getItem("goals");
@@ -761,3 +762,68 @@ updateMonthlyChart();
 updateInsights();
 updateBudgetList();
 updateGoalList();
+
+
+// Get all navigation links
+const navLinks = document.querySelectorAll("nav a");
+
+// Update the active navigation link when clicked
+navLinks.forEach(function (link) {
+    link.addEventListener("click", function () {
+        // Remove active class from every link
+        navLinks.forEach(function (navLink) {
+            navLink.classList.remove("active");
+        });
+
+        // Add active class to the clicked link
+        link.classList.add("active");
+    });
+});
+
+
+// Sections connected to the navigation
+const sections = document.querySelectorAll(
+    "#dashboard, #transactions, #budgets, #goals, #insights"
+);
+
+// Change the active navigation link while scrolling
+window.addEventListener("scroll", function () {
+    let currentSection = "";
+
+    // Check which section is currently visible
+    sections.forEach(function (section) {
+        const sectionTop = section.offsetTop;
+
+        if (window.scrollY >= sectionTop - 150) {
+            currentSection = section.id;
+        }
+    });
+
+    // Update the active navigation link
+    navLinks.forEach(function (link) {
+        link.classList.remove("active");
+
+        if (link.getAttribute("href") === `#${currentSection}`) {
+            link.classList.add("active");
+        }
+    });
+});
+
+// Get the View All button
+const viewAllButton = document.getElementById("view-all-button");
+
+// Scroll to the transactions section when clicked
+viewAllButton.addEventListener("click", function () {
+    document.getElementById("transactions").scrollIntoView({
+        behavior: "smooth"
+    });
+
+    // Clear any search text
+    searchTransaction.value = "";
+
+    // Show all transaction types
+    filterType.value = "all";
+
+    // Refresh the complete transaction list
+    updateTransactionList();
+});
