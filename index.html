@@ -7,6 +7,7 @@
     <title>AligeIQ | Personal Finance Intelligence</title>
 
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -17,8 +18,9 @@
         <p>Understand your money. Make smarter decisions.</p>
     </div>
 
+<!-- Navigation menu with links to different sections of the application -->
     <nav>
-        <a href="#">Dashboard</a>
+        <a href="#" class="active">Dashboard</a>
         <a href="#">Transactions</a>
         <a href="#">Budgets</a>
         <a href="#">Goals</a>
@@ -36,25 +38,153 @@
         <div class="kpi-grid">
             <div class="card">
                 <p>Total Income</p>
-                <h3>₹0</h3>
+                <h3 id="total-income">₹0</h3>
             </div>
 
             <div class="card">
                 <p>Total Expenses</p>
-                <h3>₹0</h3>
+                <h3 id="total-expenses">₹0</h3>
             </div>
 
             <div class="card">
                 <p>Current Balance</p>
-                <h3>₹0</h3>
+                <h3 id="current-balance">₹0</h3>
             </div>
 
             <div class="card">
                 <p>Savings Rate</p>
-                <h3>0%</h3>
+                <h3 id="savings-rate">0%</h3>
             </div>
-        </div>
+                </div>
     </section>
+
+    <section class="recent-transactions">
+        <div class="section-heading">
+            <div>
+                <h2>Recent Transactions</h2>
+                <p>A quick look at your latest financial activity.</p>
+            </div>
+
+            <button type="button">View All</button>
+        </div>
+
+        <div class="transaction-list" id="transaction-list"></div>
+
+        <!-- Search and filter controls -->
+<div class="transaction-controls">
+
+    <!-- Search by transaction name -->
+    <input
+        type="text"
+        id="search-transaction"
+        placeholder="Search transactions..."
+    >
+
+    <!-- Filter by transaction type -->
+    <select id="filter-type">
+        <option value="all">All Transactions</option>
+        <option value="income">Income</option>
+        <option value="expense">Expenses</option>
+    </select>
+
+</div>
+
+        </section>
+        
+        <section class="add-transaction">
+    <div class="dashboard-heading">
+        <h2>Add Transaction</h2>
+        <p>Add your income or expense to update your financial overview.</p>
+    </div>
+
+    <!-- Form used to collect transaction details from the user -->
+    <form id="transaction-form">
+
+        <!-- Transaction description -->
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input
+                type="text"
+                id="description"
+                placeholder="e.g. Groceries"
+                required
+            >
+        </div>
+
+        <!-- Transaction category -->
+        <div class="form-group">
+            <label for="category">Category</label>
+            <input
+                type="text"
+                id="category"
+                placeholder="e.g. Food"
+                required
+            >
+        </div>
+
+        <!-- Transaction amount -->
+        <div class="form-group">
+            <label for="amount">Amount</label>
+            <input
+                type="number"
+                id="amount"
+                placeholder="Enter amount"
+                min="0"
+                required
+            >
+        </div>
+
+        <!-- Date when the transaction happened -->
+<div class="form-group">
+    <label for="date">Date</label>
+    <input
+        type="date"
+        id="date"
+        required
+    >
+</div>
+
+        <!-- Whether money came in or went out -->
+        <div class="form-group">
+            <label for="type">Type</label>
+            <select id="type" required>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+        </div>
+
+        <!-- Button that submits the form -->
+        <button type="submit">Add Transaction</button>
+
+    </form>
+</section>
+    </section>
+
+    <section class="category-analysis">
+    <div class="dashboard-heading">
+        <h2>Spending by Category</h2>
+        <p>See where most of your money is going.</p>
+    </div>
+
+    <!-- JavaScript will add category spending here -->
+    <div id="category-list"></div>
+
+    <!-- Chart.js will draw the category chart here -->
+<div class="chart-container">
+    <canvas id="category-chart"></canvas>
+</div>
+</section>
+<section class="monthly-analysis">
+    <div class="dashboard-heading">
+        <h2>Monthly Spending Trend</h2>
+        <p>Track how your expenses change over time.</p>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="monthly-chart"></canvas>
+    </div>
+</section>
+
 </main>
 
     <script src="script.js"></script>

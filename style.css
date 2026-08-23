@@ -75,6 +75,124 @@ main {
     font-size: 26px;
 }
 
+nav a {
+    padding-bottom: 6px;
+    border-bottom: 2px solid transparent;
+}
+
+nav a.active {
+    color: #1f2937;
+    font-weight: 600;
+    border-bottom-color: #1f2937;
+}
+
+.recent-transactions {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-heading h2 {
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.section-heading p {
+    color: #6b7280;
+}
+
+.section-heading button {
+    border: none;
+    background-color: transparent;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.transaction-item h3 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.transaction-item p {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.transaction-item span {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.add-transaction {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+/* Arrange form fields in 2 columns */
+#transaction-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* Keep each label and input together */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Style both text/number inputs and the dropdown */
+.form-group input,
+.form-group select {
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+/* Style the Add Transaction button */
+#transaction-form button {
+    grid-column: span 2;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1f2937;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 @media (max-width: 768px) {
     header {
         flex-direction: column;
@@ -95,4 +213,112 @@ main {
     .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .section-heading {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .transaction-item {
+        gap: 16px;
+    }
+
+    /* Make the transaction form one column on mobile */
+    #transaction-form {
+        grid-template-columns: 1fr;
+    }
+
+    /* Button takes the single available column */
+    #transaction-form button {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-heading {
+        flex-direction: column;
+    }
+}
+
+.transaction-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.transaction-actions button {
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: white;
+    cursor: pointer;
+}
+
+/* Search and filter area */
+.transaction-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* Search input and filter dropdown */
+.transaction-controls input,
+.transaction-controls select {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Let search take the remaining space */
+.transaction-controls input {
+    flex: 1;
+}
+
+@media (max-width: 480px) {
+    .transaction-controls {
+        flex-direction: column;
+    }
+}
+
+.category-analysis {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.category-item:last-child {
+    border-bottom: none;
+}
+
+.category-item p {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* Keep the chart at a reasonable dashboard size */
+.chart-container {
+    max-width: 500px;
+    height: 350px;
+    margin: 30px auto;
+}
+
+.monthly-analysis {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
 }
