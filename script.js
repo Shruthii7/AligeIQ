@@ -1361,3 +1361,62 @@ loadTransactions();
 loadBudgets();
 loadGoals();
 
+// ================================
+// SIGNUP
+// ================================
+
+const signupForm = document.getElementById("signup-form");
+
+signupForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const name = document
+        .getElementById("signup-name")
+        .value
+        .trim();
+
+    const email = document
+        .getElementById("signup-email")
+        .value
+        .trim();
+
+    const password = document
+        .getElementById("signup-password")
+        .value;
+
+    try {
+        const response = await fetch(
+            "http://localhost:3000/api/signup",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    password
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || "Could not create account"
+            );
+        }
+
+        alert("Account created successfully!");
+
+        // Clear the form
+        signupForm.reset();
+
+        console.log("New user:", data.user);
+
+    } catch (error) {
+        console.error("Signup error:", error);
+        alert(error.message);
+    }
+});
