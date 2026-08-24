@@ -1421,3 +1421,32 @@ signupForm.addEventListener("submit", async (event) => {
     }
 });
 
+// ================================
+// SWITCH BETWEEN SIGNUP AND LOGIN
+// ================================
+
+const signupContainer =
+    document.getElementById("signup-container");
+
+const loginContainer =
+    document.getElementById("login-container");
+
+const showLoginButton =
+    document.getElementById("show-login-button");
+
+const showSignupButton =
+    document.getElementById("show-signup-button");
+
+
+// Show the Login form
+showLoginButton.addEventListener("click", () => {
+    signupContainer.style.display = "none";
+    loginContainer.style.display = "block";
+});
+
+
+// Show the Signup form
+showSignupButton.addEventListener("click", () => {
+    loginContainer.style.display = "none";
+    signupContainer.style.display = "block";
+});
