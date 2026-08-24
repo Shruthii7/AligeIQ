@@ -198,6 +198,84 @@ app.get("/api/transactions", async (req, res) => {
     }
 });
 
+// API route to get all budgets from PostgreSQL
+app.get("/api/budgets", async (req, res) => {
+    try {
+        // Read all budgets from the database
+        const result = await pool.query(
+            "SELECT * FROM budgets ORDER BY id ASC"
+        );
+
+        // Send the budget rows to the frontend
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Database error:", error);
+
+        res.status(500).json({
+            message: "Could not fetch budgets"
+        });
+    }
+});
+
+
+// API route to add a budget to PostgreSQL
+app.post("/api/budgets", async (req, res) => {
+    try {
+        // Get budget data sent by the frontend
+        const { category, amount } = req.body;
+
+        // Insert the budget into PostgreSQL
+        const result = await pool.query(
+            `INSERT INTO budgets (category, amount)
+             VALUES ($1, $2)
+             RETURNING *`,
+            [category, amount]
+        );
+
+        // Send the newly created budget back
+        res.status(201).json(result.rows[0]);
+
+    } catch (error) {
+        console.error("Database error:", error);
+
+        res.status(500).json({
+            message: "Could not add budget"
+        });
+    }
+});
+
+// API route to delete a budget from PostgreSQL
+app.delete("/api/budgets/:id", async (req, res) => {
+    try {
+        const budgetId = Number(req.params.id);
+
+        const result = await pool.query(
+            "DELETE FROM budgets WHERE id = $1 RETURNING *",
+            [budgetId]
+        );
+
+        // Stop if the budget does not exist
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Budget not found"
+            });
+        }
+
+        res.json({
+            message: "Budget deleted successfully",
+            deletedBudget: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Error deleting budget:", error);
+
+        res.status(500).json({
+            message: "Could not delete budget"
+        });
+    }
+});
+
 // Start the backend server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

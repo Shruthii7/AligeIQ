@@ -72,32 +72,61 @@ goalForm.addEventListener("submit", function (event) {
     goalForm.reset();
 });
 
-// Run this when the user submits the budget form
-budgetForm.addEventListener("submit", function (event) {
-    // Stop the page from refreshing
+budgetForm.addEventListener("submit", async function (event) {
+    // Prevent the page from refreshing
     event.preventDefault();
 
-    // Get values entered by the user
-    const category = document.getElementById("budget-category").value;
-    const amount = Number(document.getElementById("budget-amount").value);
+    // Get values from the form
+    const category = document
+        .getElementById("budget-category")
+        .value
+        .trim();
 
-    // Create a new budget object
-    const newBudget = {
-        category: category,
-        amount: amount
-    };
+    const amount = Number(
+        document.getElementById("budget-amount").value
+    );
 
-    // Add the budget to our budgets array
-    budgets.push(newBudget);
+    try {
+        // Send the new budget to the backend
+        const response = await fetch(
+            "http://localhost:3000/api/budgets",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    category: category,
+                    amount: amount
+                })
+            }
+        );
 
-    // Save budgets in localStorage
-    localStorage.setItem("budgets", JSON.stringify(budgets));
+        // Check whether the backend saved it
+        if (!response.ok) {
+            throw new Error("Could not save budget");
+        }
 
-    // Update the budget display
-    updateBudgetList();
+        // Get the saved budget back from PostgreSQL
+        const savedBudget = await response.json();
 
-    // Clear the form
-    budgetForm.reset();
+        // Add the database budget to the frontend array
+        budgets.push(savedBudget);
+
+        // Update the budget display
+        updateBudgetList();
+
+        // Clear the form
+        budgetForm.reset();
+
+        console.log("Budget saved:", savedBudget);
+
+    } catch (error) {
+        console.error("Error saving budget:", error);
+        alert(
+            "Budget could not be saved. Make sure the backend is running."
+        );
+    }
 });
 
 
@@ -565,119 +594,121 @@ if (transactions.length === 0) {
     `;
 }
 
-// Display all budgets and calculate their usage
 function updateBudgetList() {
-    // Get the budget display area from HTML
     const budgetList = document.getElementById("budget-list");
+    budgetList.innerHTML = "";
 
-    // Clear the previous display
-   budgetList.innerHTML = "";
+    if (budgets.length === 0) {
+        budgetList.innerHTML =
+            "<p>No budgets yet. Set your first spending limit above.</p>";
+        return;
+    }
 
-// Show a message when no budgets exist
-if (budgets.length === 0) {
-    budgetList.innerHTML = `
-        <p class="empty-state">
-            No budgets yet. Set your first spending limit above.
-        </p>
-    `;
-
-    return;
-}
-
-    // Go through every budget
-    for (let i = 0; i < budgets.length; i++) {
-        const budget = budgets[i];
-
-        // Start the spent amount at 0
-        let spent = 0;
-
-        // Check every transaction
-        for (let j = 0; j < transactions.length; j++) {
-            const transaction = transactions[j];
-
-            // Add expenses that belong to this budget category
-            if (
+    budgets.forEach(budget => {
+        const spent = transactions
+            .filter(transaction =>
                 transaction.type === "expense" &&
                 transaction.category.toLowerCase() ===
                     budget.category.toLowerCase()
-            ) {
-                spent += transaction.amount;
-            }
-        }
+            )
+            .reduce(
+                (total, transaction) =>
+                    total + Number(transaction.amount),
+                0
+            );
 
-        // Calculate remaining budget
-        const remaining = budget.amount - spent;
+        const percentageUsed =
+            Number(budget.amount) > 0
+                ? (spent / Number(budget.amount)) * 100
+                : 0;
 
-        // Calculate percentage used
-        const percentage =
-    budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+        const budgetItem = document.createElement("div");
+        budgetItem.classList.add("budget-item");
 
-        // Keep the progress bar from becoming wider than 100%
-        const progressWidth = Math.min(percentageUsed, 100);
+        budgetItem.innerHTML = `
+            <div class="budget-info">
+                <div class="budget-header">
+                    <h3>${budget.category}</h3>
 
-        // Decide whether the budget needs a warning
-let alertMessage = "";
+                    <button
+                        type="button"
+                        class="delete-budget-button"
+                    >
+                        Delete
+                    </button>
+                </div>
 
-if (percentageUsed >= 100) {
-    alertMessage = "🚨 You have exceeded this budget!";
-} else if (percentageUsed >= 80) {
-    alertMessage = "⚠️ You are close to your budget limit.";
-}
-
-
-        // Add the budget to the page
-        budgetList.innerHTML += `
-            <div class="budget-item">
-               <div class="budget-top">
-    <strong>${budget.category}</strong>
-
-    <div class="budget-actions">
-        <strong>₹${budget.amount.toLocaleString("en-IN")}</strong>
-
-        <button
-            type="button"
-            onclick="deleteBudget(${i})"
-            class="delete-budget-btn"
-        >
-            Delete
-        </button>
-    </div>
-</div>
-
-                <div class="budget-details">
-    Spent: ₹${spent.toLocaleString("en-IN")} ·
-    Remaining: ₹${remaining.toLocaleString("en-IN")} ·
-    ${percentageUsed.toFixed(1)}% used
-</div>
-
-${alertMessage ? `
-    <div class="budget-alert">
-        ${alertMessage}
-    </div>
-` : ""}
+                <p>
+                    ₹${spent.toFixed(2)} spent of
+                    ₹${Number(budget.amount).toFixed(2)}
+                </p>
 
                 <div class="budget-progress">
                     <div
                         class="budget-progress-bar"
-                        style="width: ${progressWidth}%"
+                        style="width: ${Math.min(percentageUsed, 100)}%"
                     ></div>
                 </div>
+
+                <p>${percentageUsed.toFixed(1)}% used</p>
             </div>
         `;
-    }
+
+        const deleteButton = budgetItem.querySelector(
+            ".delete-budget-button"
+        );
+
+        deleteButton.addEventListener("click", () => {
+            deleteBudget(budget.id, budget.category);
+        });
+
+        budgetList.appendChild(budgetItem);
+    });
 }
 
 
-// Delete a budget using its position in the budgets array
-function deleteBudget(index) {
-    // Remove one budget from the array
-    budgets.splice(index, 1);
+async function deleteBudget(id, category) {
+    const confirmDelete = confirm(
+        `Delete the ${category} budget?`
+    );
 
-    // Save the updated budgets array
-    localStorage.setItem("budgets", JSON.stringify(budgets));
+    if (!confirmDelete) {
+        return;
+    }
 
-    // Refresh the budget display
-    updateBudgetList();
+    try {
+        const response = await fetch(
+            `http://localhost:3000/api/budgets/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json();
+
+            throw new Error(
+                errorData.message || "Could not delete budget"
+            );
+        }
+
+       // Find the deleted budget in the existing array
+const budgetIndex = budgets.findIndex(
+    budget => Number(budget.id) === Number(id)
+);
+
+// Remove it from the existing array
+if (budgetIndex !== -1) {
+    budgets.splice(budgetIndex, 1);
+}
+
+        // Refresh the display
+        updateBudgetList();
+
+    } catch (error) {
+        console.error("Error deleting budget:", error);
+        alert(`Could not delete the budget: ${error.message}`);
+    }
 }
 
 // Display all financial goals
@@ -1033,5 +1064,37 @@ async function loadTransactions() {
     }
 }
 
+async function loadBudgets() {
+    try {
+        const response = await fetch(
+            "http://localhost:3000/api/budgets"
+        );
+
+        console.log("Budget response status:", response.status);
+
+        if (!response.ok) {
+            throw new Error("Could not load budgets");
+        }
+
+        const backendBudgets = await response.json();
+
+        console.log("Budgets received:", backendBudgets);
+
+        budgets.length = 0;
+
+        budgets.push(...backendBudgets);
+
+        console.log("Frontend budgets array:", budgets);
+
+        updateBudgetList();
+
+    } catch (error) {
+        console.error("Error loading budgets:", error);
+        alert("Could not load budgets from the backend.");
+    }
+}
+
 // Load backend data when AligeIQ opens
 loadTransactions();
+loadBudgets();
+
