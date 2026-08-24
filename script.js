@@ -1386,7 +1386,7 @@ signupForm.addEventListener("submit", async (event) => {
 
     try {
         const response = await fetch(
-            "http://localhost:3000/api/signup",
+            "http://localhost:3000/api/register",
             {
                 method: "POST",
                 headers: {
@@ -1420,3 +1420,4 @@ signupForm.addEventListener("submit", async (event) => {
         alert(error.message);
     }
 });
+
