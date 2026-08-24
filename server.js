@@ -56,34 +56,45 @@ app.get("/", (req, res) => {
 //     }
 // ];
 
-// API route to add a new transaction to PostgreSQL
 app.post("/api/transactions", async (req, res) => {
     try {
-        // Get transaction data sent by the frontend
         const {
             description,
             category,
             amount,
             date,
-            type
+            type,
+            userId
         } = req.body;
 
-        // Insert the transaction into PostgreSQL
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
             `INSERT INTO transactions
-            (description, category, amount, date, type)
-            VALUES ($1, $2, $3, $4, $5)
+            (
+                description,
+                category,
+                amount,
+                date,
+                type,
+                user_id
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *`,
             [
                 description,
                 category,
                 amount,
                 date,
-                type
+                type,
+                userId
             ]
         );
 
-        // Send the newly created database row back
         res.status(201).json(result.rows[0]);
 
     } catch (error) {
@@ -95,26 +106,34 @@ app.post("/api/transactions", async (req, res) => {
     }
 });
 
-// API route to delete a transaction from PostgreSQL
 app.delete("/api/transactions/:id", async (req, res) => {
     try {
-        // Get the transaction ID from the URL
         const transactionId = req.params.id;
+        const userId = req.query.userId;
 
-        // Delete the transaction from PostgreSQL
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
-            "DELETE FROM transactions WHERE id = $1 RETURNING *",
-            [transactionId]
+            `DELETE FROM transactions
+             WHERE id = $1
+             AND user_id = $2
+             RETURNING *`,
+            [
+                transactionId,
+                userId
+            ]
         );
 
-        // Check whether the transaction existed
         if (result.rows.length === 0) {
             return res.status(404).json({
                 message: "Transaction not found"
             });
         }
 
-        // Send the deleted transaction back
         res.json({
             message: "Transaction deleted successfully",
             transaction: result.rows[0]
@@ -128,22 +147,26 @@ app.delete("/api/transactions/:id", async (req, res) => {
         });
     }
 });
-// API route to update a transaction in PostgreSQL
+
 app.put("/api/transactions/:id", async (req, res) => {
     try {
-        // Get the transaction ID from the URL
         const transactionId = req.params.id;
 
-        // Get the updated transaction data from the frontend
         const {
             description,
             category,
             amount,
             date,
-            type
+            type,
+            userId
         } = req.body;
 
-        // Update the transaction in PostgreSQL
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
             `UPDATE transactions
              SET description = $1,
@@ -152,6 +175,7 @@ app.put("/api/transactions/:id", async (req, res) => {
                  date = $4,
                  type = $5
              WHERE id = $6
+             AND user_id = $7
              RETURNING *`,
             [
                 description,
@@ -159,18 +183,17 @@ app.put("/api/transactions/:id", async (req, res) => {
                 amount,
                 date,
                 type,
-                transactionId
+                transactionId,
+                userId
             ]
         );
 
-        // Check whether the transaction exists
         if (result.rows.length === 0) {
             return res.status(404).json({
                 message: "Transaction not found"
             });
         }
 
-        // Send the updated transaction back
         res.json(result.rows[0]);
 
     } catch (error) {
@@ -181,15 +204,26 @@ app.put("/api/transactions/:id", async (req, res) => {
         });
     }
 });
-// API route to get all transactions from PostgreSQL
+
+
 app.get("/api/transactions", async (req, res) => {
     try {
-        // Read all transactions from the database
+        const userId = req.query.userId;
+
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
-            "SELECT * FROM transactions ORDER BY id ASC"
+            `SELECT *
+             FROM transactions
+             WHERE user_id = $1
+             ORDER BY id ASC`,
+            [userId]
         );
 
-        // Send the database rows to the frontend
         res.json(result.rows);
 
     } catch (error) {

@@ -1,4 +1,10 @@
 console.log("AligeIQ JavaScript is connected!");
+const currentUser = JSON.parse(
+    localStorage.getItem("currentUser")
+);
+if (!currentUser) {
+    console.error("No user is logged in");
+}
 
 // Load saved transactions from LocalStorage
 const savedTransactions = localStorage.getItem("transactions");
@@ -66,6 +72,7 @@ goalForm.addEventListener("submit", async function (event) {
                     name: name,
                     targetAmount: targetAmount,
                     savedAmount: savedAmount
+                    
                 })
             }
         );
@@ -188,13 +195,16 @@ transactionForm.addEventListener("submit", async function (event) {
     try {
         // Send the transaction to the backend
         const response = await fetch(
-            "http://localhost:3000/api/transactions",
+            `http://localhost:3000/api/transactions?userId=${currentUser.id}`,
             {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(newTransaction)
+                body: JSON.stringify({
+            ...newTransaction,
+            userId: currentUser.id
+        })
             }
         );
 
@@ -1094,13 +1104,15 @@ async function editTransaction(id) {
     try {
         // Send the updated transaction to the backend
         const response = await fetch(
-            `http://localhost:3000/api/transactions/${id}`,
+            `http://localhost:3000/api/transactions?userId=${currentUser.id}`,
             {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(updatedTransaction)
+                body: JSON.stringify({
+                    updatedTransaction,
+                userId: currentUser.id})
             }
         );
 
@@ -1144,7 +1156,7 @@ async function deleteTransaction(id) {
     try {
         // Ask the backend to delete this transaction
         const response = await fetch(
-            `http://localhost:3000/api/transactions/${id}`,
+            `http://localhost:3000/api/transactions/${id}?userId=${currentUser.id}`,
             {
                 method: "DELETE"
             }
@@ -1254,7 +1266,7 @@ async function loadTransactions() {
     try {
         // Ask the backend for all transactions
         const response = await fetch(
-            "http://localhost:3000/api/transactions"
+            `http://localhost:3000/api/transactions?userId=${currentUser.id}`
         );
 
         // Check whether the request worked
