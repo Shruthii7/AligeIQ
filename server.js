@@ -485,6 +485,52 @@ app.post("/api/signup", async (req, res) => {
     }
 });
 
+// Register a new user
+app.post("/api/register", async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        // Check if all fields are provided
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                message: "All fields are required"
+            });
+        }
+
+        // Check if email already exists
+        const existingUser = await pool.query(
+            "SELECT * FROM users WHERE email = $1",
+            [email]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({
+                message: "Email already registered"
+            });
+        }
+
+        // Insert new user
+        const result = await pool.query(
+            `INSERT INTO users (name, email, password)
+             VALUES ($1, $2, $3)
+             RETURNING id, name, email, created_at`,
+            [name, email, password]
+        );
+
+        res.status(201).json({
+            message: "User registered successfully",
+            user: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Registration error:", error);
+
+        res.status(500).json({
+            message: "Could not register user"
+        });
+    }
+});
+
 
 // Start the backend server
 app.listen(PORT, () => {
