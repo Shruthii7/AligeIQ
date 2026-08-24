@@ -319,6 +319,126 @@ app.post("/api/goals", async (req, res) => {
     }
 });
 
+app.put("/api/budgets/:id", async (req, res) => {
+    const { category, amount } = req.body;
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `
+            UPDATE budgets
+            SET category = $1,
+                amount = $2
+            WHERE id = $3
+            RETURNING *
+            `,
+            [category, amount, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Budget not found"
+            });
+        }
+
+        res.json(result.rows[0]);
+
+    } catch (error) {
+        console.error(
+            "Error updating budget:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Could not update budget"
+        });
+    }
+});
+
+app.delete("/api/goals/:id", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `
+            DELETE FROM goals
+            WHERE id = $1
+            RETURNING *
+            `,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Goal not found"
+            });
+        }
+
+        res.json({
+            message: "Goal deleted successfully",
+            goal: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error(
+            "Error deleting goal:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Could not delete goal"
+        });
+    }
+});
+
+app.put("/api/goals/:id", async (req, res) => {
+    const {
+        name,
+        targetAmount,
+        savedAmount
+    } = req.body;
+
+    const { id } = req.params;
+
+    try {
+        const result = await pool.query(
+            `
+            UPDATE goals
+            SET name = $1,
+                target_amount = $2,
+                saved_amount = $3
+            WHERE id = $4
+            RETURNING *
+            `,
+            [
+                name,
+                targetAmount,
+                savedAmount,
+                id
+            ]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Goal not found"
+            });
+        }
+
+        res.json(result.rows[0]);
+
+    } catch (error) {
+        console.error(
+            "Error updating goal:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Could not update goal"
+        });
+    }
+});
+
+
 // Start the backend server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
