@@ -1493,15 +1493,77 @@ loginForm.addEventListener("submit", async (event) => {
             );
         }
 
-        alert(`Welcome back, ${data.user.name}!`);
+        // Save the logged-in user
+localStorage.setItem(
+    "loggedInUser",
+    JSON.stringify(data.user)
+);
 
-        console.log("Logged in user:", data.user);
+alert(`Welcome back, ${data.user.name}!`);
 
-        // Clear the login form
-        loginForm.reset();
+console.log("Logged in user:", data.user);
+
+// Clear the login form
+loginForm.reset();
+
+// Open the AligeIQ application
+showApp();
 
     } catch (error) {
         console.error("Login error:", error);
         alert(error.message);
     }
+});
+
+// ================================
+// LOGIN SESSION AND LOGOUT
+// ================================
+
+const authSection =
+    document.getElementById("auth-section");
+
+const appContent =
+    document.getElementById("app-content");
+
+const logoutButton =
+    document.getElementById("logout-button");
+
+
+// Show the finance application
+function showApp() {
+    authSection.style.display = "none";
+    appContent.style.display = "block";
+}
+
+
+// Show authentication
+function showAuth() {
+    appContent.style.display = "none";
+    authSection.style.display = "block";
+
+    // Start with the signup form visible
+    signupContainer.style.display = "block";
+    loginContainer.style.display = "none";
+}
+
+
+// Check whether a user was already logged in
+const savedUser = localStorage.getItem("loggedInUser");
+
+if (savedUser) {
+    showApp();
+} else {
+    showAuth();
+}
+
+
+// Logout
+logoutButton.addEventListener("click", () => {
+    // Remove the saved login
+    localStorage.removeItem("loggedInUser");
+
+    // Return to authentication
+    showAuth();
+
+    alert("You have been logged out.");
 });
