@@ -192,12 +192,12 @@ function updateDashboard() {
 
     // Check every transaction
     for (let i = 0; i < transactions.length; i++) {
-        if (transactions[i].type === "income") {
-            totalIncome += transactions[i].amount;
-        } else if (transactions[i].type === "expense") {
-            totalExpenses += transactions[i].amount;
-        }
+    if (transactions[i].type === "income") {
+        totalIncome += Number(transactions[i].amount);
+    } else if (transactions[i].type === "expense") {
+        totalExpenses += Number(transactions[i].amount);
     }
+}
 
     // Calculate remaining balance
     const currentBalance = totalIncome - totalExpenses;
@@ -294,8 +294,9 @@ if (!matchesSearch || !matchesType) {
                     <span>${sign}₹${transaction.amount.toLocaleString("en-IN")}</span>
 
                     <!-- Store the array index so JavaScript knows what to delete -->
-                    <button onclick="editTransaction(${i})">Edit</button>
-                    <button onclick="deleteTransaction(${i})">Delete</button>
+                    <!-- Use the actual PostgreSQL transaction ID -->
+<button onclick="editTransaction(${transaction.id})">Edit</button>
+<button onclick="deleteTransaction(${transaction.id})">Delete</button>
                 </div>
             </div>
         `;

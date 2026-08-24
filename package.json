@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Shruthii7/AligeIQ#readme",
   "dependencies": {
     "cors": "^2.8.6",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "pg": "^8.23.0"
   }
 }
