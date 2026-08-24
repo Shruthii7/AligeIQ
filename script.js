@@ -41,6 +41,50 @@ const transactionForm = document.getElementById("transaction-form");
 const budgetForm = document.getElementById("budget-form");
 // Get the goal form from HTML
 const goalForm = document.getElementById("goal-form");
+const goalNameInput = document.getElementById("goal-name");
+const goalTargetInput = document.getElementById("goal-target");
+const goalSavedInput = document.getElementById("goal-saved");
+
+goalForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const name = goalNameInput.value.trim();
+    const targetAmount = Number(goalTargetInput.value);
+    const savedAmount = Number(goalSavedInput.value);
+
+    try {
+        const response = await fetch(
+            "http://localhost:3000/api/goals",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name,
+                    targetAmount: targetAmount,
+                    savedAmount: savedAmount
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not add goal");
+        }
+
+        // Clear the form after successfully adding the goal
+        goalForm.reset();
+
+        // Reload and display all goals
+        loadGoals();
+
+    } catch (error) {
+        console.error("Error adding goal:", error);
+        alert("Could not add the goal.");
+    }
+});
+
+
 
 // Run when the user submits the goal form
 goalForm.addEventListener("submit", function (event) {
