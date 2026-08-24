@@ -1450,3 +1450,58 @@ showSignupButton.addEventListener("click", () => {
     loginContainer.style.display = "none";
     signupContainer.style.display = "block";
 });
+
+// ================================
+// USER LOGIN
+// ================================
+
+const loginForm =
+    document.getElementById("login-form");
+
+loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const email = document
+        .getElementById("login-email")
+        .value
+        .trim();
+
+    const password = document
+        .getElementById("login-password")
+        .value;
+
+    try {
+        const response = await fetch(
+            "http://localhost:3000/api/login",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email,
+                    password
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || "Could not log in"
+            );
+        }
+
+        alert(`Welcome back, ${data.user.name}!`);
+
+        console.log("Logged in user:", data.user);
+
+        // Clear the login form
+        loginForm.reset();
+
+    } catch (error) {
+        console.error("Login error:", error);
+        alert(error.message);
+    }
+});
