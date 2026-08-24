@@ -276,6 +276,49 @@ app.delete("/api/budgets/:id", async (req, res) => {
     }
 });
 
+// API route to get all goals from PostgreSQL
+app.get("/api/goals", async (req, res) => {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM goals ORDER BY id ASC"
+        );
+
+        res.json(result.rows);
+
+    } catch (error) {
+        console.error("Error fetching goals:", error);
+
+        res.status(500).json({
+            message: "Could not fetch goals"
+        });
+    }
+});
+
+
+// API route to add a new goal to PostgreSQL
+app.post("/api/goals", async (req, res) => {
+    try {
+        const { name, targetAmount, savedAmount } = req.body;
+
+        const result = await pool.query(
+            `INSERT INTO goals
+            (name, target_amount, saved_amount)
+            VALUES ($1, $2, $3)
+            RETURNING *`,
+            [name, targetAmount, savedAmount]
+        );
+
+        res.status(201).json(result.rows[0]);
+
+    } catch (error) {
+        console.error("Error adding goal:", error);
+
+        res.status(500).json({
+            message: "Could not add goal"
+        });
+    }
+});
+
 // Start the backend server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
