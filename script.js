@@ -33,6 +33,7 @@ const transactions = savedTransactions
     // Store chart objects so we can update them later
 let categoryChart;
 let monthlyChart;
+let goals = [];
 
 // form references
 // Get the transaction form
@@ -44,6 +45,7 @@ const goalForm = document.getElementById("goal-form");
 const goalNameInput = document.getElementById("goal-name");
 const goalTargetInput = document.getElementById("goal-target");
 const goalSavedInput = document.getElementById("goal-saved");
+
 
 goalForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -72,49 +74,25 @@ goalForm.addEventListener("submit", async function (event) {
             throw new Error("Could not add goal");
         }
 
-        // Clear the form after successfully adding the goal
-        goalForm.reset();
+        // Get the newly saved goal from PostgreSQL
+        const savedGoal = await response.json();
 
-        // Reload and display all goals
-        loadGoals();
+        // Add it to our existing frontend array
+        goals.push(savedGoal);
+
+        // Update the display immediately
+        updateGoalList();
+
+        // Clear the form
+        goalForm.reset();
 
     } catch (error) {
         console.error("Error adding goal:", error);
-        alert("Could not add the goal.");
+        alert("Could not add goal.");
     }
 });
 
 
-
-// Run when the user submits the goal form
-goalForm.addEventListener("submit", function (event) {
-    // Stop the page from refreshing
-    event.preventDefault();
-
-    // Get values entered by the user
-    const name = document.getElementById("goal-name").value;
-    const target = Number(document.getElementById("goal-target").value);
-    const saved = Number(document.getElementById("goal-saved").value);
-
-    // Create one goal object
-    const newGoal = {
-        name: name,
-        target: target,
-        saved: saved
-    };
-
-    // Add the goal to our goals array
-    goals.push(newGoal);
-
-    // Save goals in the browser
-    localStorage.setItem("goals", JSON.stringify(goals));
-
-    // Refresh the goals shown on the page
-    updateGoalList();
-
-    // Clear the form
-    goalForm.reset();
-});
 
 budgetForm.addEventListener("submit", async function (event) {
     // Prevent the page from refreshing
@@ -300,14 +278,6 @@ const budgets = savedBudgets
     ? JSON.parse(savedBudgets)
     : [];
 
-
-// Load saved goals from localStorage
-const savedGoals = localStorage.getItem("goals");
-
-// Use saved goals, or start with an empty array
-const goals = savedGoals
-    ? JSON.parse(savedGoals)
-    : [];
 
 // Display transactions on the dashboard
 // Display transactions on the dashboard
@@ -637,14 +607,15 @@ if (transactions.length === 0) {
         </div>
     `;
 }
-
 function updateBudgetList() {
     const budgetList = document.getElementById("budget-list");
+
     budgetList.innerHTML = "";
 
     if (budgets.length === 0) {
         budgetList.innerHTML =
             "<p>No budgets yet. Set your first spending limit above.</p>";
+
         return;
     }
 
@@ -661,55 +632,147 @@ function updateBudgetList() {
                 0
             );
 
+        const budgetAmount = Number(budget.amount);
+
         const percentageUsed =
-            Number(budget.amount) > 0
-                ? (spent / Number(budget.amount)) * 100
+            budgetAmount > 0
+                ? Math.min((spent / budgetAmount) * 100, 100)
                 : 0;
 
-        const budgetItem = document.createElement("div");
-        budgetItem.classList.add("budget-item");
-
-        budgetItem.innerHTML = `
-            <div class="budget-info">
-                <div class="budget-header">
+        budgetList.innerHTML += `
+            <div class="budget-item">
+                <div class="item-header">
                     <h3>${budget.category}</h3>
 
-                    <button
-                        type="button"
-                        class="delete-budget-button"
-                    >
-                        Delete
-                    </button>
+                    <div class="item-actions">
+                        <button
+                            class="action-button edit-button"
+                            onclick="editBudget(${budget.id})"
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            class="action-button delete-button"
+                            onclick="deleteBudget(${budget.id}, '${budget.category}')"
+                        >
+                            Delete
+                        </button>
+                    </div>
                 </div>
 
                 <p>
                     ₹${spent.toFixed(2)} spent of
-                    ₹${Number(budget.amount).toFixed(2)}
+                    ₹${budgetAmount.toFixed(2)}
                 </p>
 
-                <div class="budget-progress">
+                <div class="progress-bar">
                     <div
-                        class="budget-progress-bar"
-                        style="width: ${Math.min(percentageUsed, 100)}%"
+                        class="progress-fill"
+                        style="width: ${percentageUsed}%"
                     ></div>
                 </div>
 
                 <p>${percentageUsed.toFixed(1)}% used</p>
             </div>
         `;
-
-        const deleteButton = budgetItem.querySelector(
-            ".delete-budget-button"
-        );
-
-        deleteButton.addEventListener("click", () => {
-            deleteBudget(budget.id, budget.category);
-        });
-
-        budgetList.appendChild(budgetItem);
     });
 }
 
+async function editBudget(id) {
+    // Find the budget in the frontend array
+    const budget = budgets.find(
+        budget => Number(budget.id) === Number(id)
+    );
+
+    if (!budget) {
+        alert("Budget not found.");
+        return;
+    }
+
+    // Ask for the updated category
+    const category = prompt(
+        "Category:",
+        budget.category
+    );
+
+    // Stop if the user cancels
+    if (category === null) {
+        return;
+    }
+
+    // Ask for the updated amount
+    const amount = prompt(
+        "Monthly budget amount:",
+        budget.amount
+    );
+
+    // Stop if the user cancels
+    if (amount === null) {
+        return;
+    }
+
+    const updatedCategory = category.trim();
+    const updatedAmount = Number(amount);
+
+    // Validate the values
+    if (!updatedCategory) {
+        alert("Category cannot be empty.");
+        return;
+    }
+
+    if (!updatedAmount || updatedAmount <= 0) {
+        alert("Please enter a valid budget amount.");
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://localhost:3000/api/budgets/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    category: updatedCategory,
+                    amount: updatedAmount
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not update budget");
+        }
+
+        // Get the updated budget from the backend
+        const updatedBudget = await response.json();
+
+        // Find its position in the frontend array
+        const budgetIndex = budgets.findIndex(
+            budget => Number(budget.id) === Number(id)
+        );
+
+        // Replace the old budget
+        if (budgetIndex !== -1) {
+            budgets[budgetIndex] = updatedBudget;
+        }
+
+        // Refresh the display
+        updateBudgetList();
+
+        console.log(
+            "Budget updated successfully:",
+            updatedBudget
+        );
+
+    } catch (error) {
+        console.error("Error editing budget:", error);
+        alert(
+            `Could not update the budget: ${error.message}`
+        );
+    }
+}
 
 async function deleteBudget(id, category) {
     const confirmDelete = confirm(
@@ -754,116 +817,239 @@ if (budgetIndex !== -1) {
         alert(`Could not delete the budget: ${error.message}`);
     }
 }
-
-// Display all financial goals
 function updateGoalList() {
-    // Get the container from HTML
     const goalList = document.getElementById("goal-list");
 
-    // Clear the previous display
     goalList.innerHTML = "";
 
-    // Show a message when no goals exist
-if (goals.length === 0) {
-    goalList.innerHTML = `
-        <p class="empty-state">
-            No financial goals yet. Add your first goal above.
-        </p>
-    `;
+    if (goals.length === 0) {
+        goalList.innerHTML =
+            "<p>No financial goals yet. Add your first goal above.</p>";
+        return;
+    }
 
-    return;
-}
+    goals.forEach((goal) => {
+        const targetAmount = Number(goal.target_amount);
+        const savedAmount = Number(goal.saved_amount);
 
-    // Go through every goal
-    for (let i = 0; i < goals.length; i++) {
-        const goal = goals[i];
-
-        // Calculate percentage progress
         const percentage =
-    goal.target > 0 ? (goal.saved / goal.target) * 100 : 0;
+            targetAmount > 0
+                ? Math.min((savedAmount / targetAmount) * 100, 100)
+                : 0;
 
-        // Prevent the progress bar from going beyond 100%
-        const progressWidth = Math.min(percentage, 100);
+        const goalItem = document.createElement("div");
+        goalItem.classList.add("goal-item");
 
-        // Calculate how much is still needed
-        const remaining = Math.max(goal.target - goal.saved, 0);
+        goalItem.innerHTML = `
+            <div class="item-header">
+                <h3>${goal.name}</h3>
 
-        // Add the goal to the page
-        goalList.innerHTML += `
-            <div class="goal-item">
-                <div class="goal-top">
-    <strong>${goal.name}</strong>
+                <div class="item-actions">
+                    <button
+                        class="action-button edit-button"
+                        onclick="editGoal(${goal.id})"
+                    >
+                        Edit
+                    </button>
 
-    <div class="goal-actions">
-        <button
-            type="button"
-            class="add-savings-btn"
-            onclick="addSavings(${i})"
-        >
-            Add Savings
-        </button>
-
-        <button
-            type="button"
-            class="delete-goal-btn"
-            onclick="deleteGoal(${i})"
-        >
-            Delete
-        </button>
-    </div>
-</div>
-
-                <div class="goal-details">
-                    Saved: ₹${goal.saved.toLocaleString("en-IN")} ·
-                    Target: ₹${goal.target.toLocaleString("en-IN")} ·
-                    Remaining: ₹${remaining.toLocaleString("en-IN")} ·
-                    ${percentage.toFixed(1)}% complete
-                </div>
-
-                <div class="goal-progress">
-                    <div
-                        class="goal-progress-bar"
-                        style="width: ${progressWidth}%"
-                    ></div>
+                    <button
+                        class="action-button delete-button"
+                        onclick="deleteGoal(${goal.id}, '${goal.name}')"
+                    >
+                        Delete
+                    </button>
                 </div>
             </div>
+
+            <p>
+                ₹${savedAmount.toLocaleString("en-IN")}
+                saved of
+                ₹${targetAmount.toLocaleString("en-IN")}
+            </p>
+
+            <div class="goal-progress">
+                <div
+                    class="goal-progress-bar"
+                    style="width: ${percentage}%"
+                ></div>
+            </div>
+
+            <p>${percentage.toFixed(1)}% completed</p>
         `;
+
+        goalList.appendChild(goalItem);
+    });
+}
+
+
+async function deleteGoal(id, name) {
+    const confirmDelete = confirm(
+        `Delete the ${name} goal?`
+    );
+
+    if (!confirmDelete) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://localhost:3000/api/goals/${id}`,
+            {
+                method: "DELETE"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not delete goal");
+        }
+
+        const goalIndex = goals.findIndex(
+            goal => Number(goal.id) === Number(id)
+        );
+
+        if (goalIndex !== -1) {
+            goals.splice(goalIndex, 1);
+        }
+
+        updateGoalList();
+
+    } catch (error) {
+        console.error("Error deleting goal:", error);
+        alert(`Could not delete the goal: ${error.message}`);
     }
 }
 
-// Delete a goal using its position in the goals array
-function deleteGoal(index) {
-    // Remove one goal from the array
-    goals.splice(index, 1);
 
-    // Save the updated goals
-    localStorage.setItem("goals", JSON.stringify(goals));
+async function editGoal(id) {
+    const goal = goals.find(
+        goal => Number(goal.id) === Number(id)
+    );
 
-    // Refresh the goals on the page
-    updateGoalList();
+    if (!goal) {
+        return;
+    }
+
+    const name = prompt(
+        "Goal name:",
+        goal.name
+    );
+
+    const targetAmount = prompt(
+        "Target amount:",
+        goal.target_amount
+    );
+
+    const savedAmount = prompt(
+        "Amount saved:",
+        goal.saved_amount
+    );
+
+    if (
+        name === null ||
+        targetAmount === null ||
+        savedAmount === null
+    ) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `http://localhost:3000/api/goals/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: name.trim(),
+                    targetAmount: Number(targetAmount),
+                    savedAmount: Number(savedAmount)
+                })
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not update goal");
+        }
+
+        const updatedGoal = await response.json();
+
+        const goalIndex = goals.findIndex(
+            goal => Number(goal.id) === Number(id)
+        );
+
+        if (goalIndex !== -1) {
+            goals[goalIndex] = updatedGoal;
+        }
+
+        updateGoalList();
+
+    } catch (error) {
+        console.error("Error editing goal:", error);
+        alert(`Could not update the goal: ${error.message}`);
+    }
 }
 
-// Add more money to an existing financial goal
-function addSavings(index) {
-    // Ask the user how much money they want to add
+
+async function addSavings(id) {
+    const goal = goals.find(
+        goal => Number(goal.id) === Number(id)
+    );
+
+    if (!goal) {
+        return;
+    }
+
     const amount = Number(
         prompt("How much do you want to add to this goal?")
     );
 
-    // Stop if the user enters an invalid amount
     if (!amount || amount <= 0) {
         return;
     }
 
-    // Add the new savings amount to the goal
-    goals[index].saved += amount;
+    const newSavedAmount =
+        Number(goal.saved_amount) + amount;
 
-    // Save the updated goals in localStorage
-    localStorage.setItem("goals", JSON.stringify(goals));
+    try {
+        const response = await fetch(
+            `http://localhost:3000/api/goals/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: goal.name,
+                    targetAmount: Number(goal.target_amount),
+                    savedAmount: newSavedAmount
+                })
+            }
+        );
 
-    // Refresh the goals display
-    updateGoalList();
+        if (!response.ok) {
+            throw new Error("Could not update savings");
+        }
+
+        const updatedGoal = await response.json();
+
+        const goalIndex = goals.findIndex(
+            goal => Number(goal.id) === Number(id)
+        );
+
+        if (goalIndex !== -1) {
+            goals[goalIndex] = updatedGoal;
+        }
+
+        updateGoalList();
+
+    } catch (error) {
+        console.error("Error adding savings:", error);
+        alert(`Could not add savings: ${error.message}`);
+    }
 }
+
+
 async function editTransaction(id) {
     // Find the transaction we want to edit
     const transaction = transactions.find(
@@ -1108,6 +1294,38 @@ async function loadTransactions() {
     }
 }
 
+async function loadGoals() {
+    try {
+        const response = await fetch(
+            "http://localhost:3000/api/goals"
+        );
+
+        if (!response.ok) {
+            throw new Error("Could not load goals");
+        }
+
+        const backendGoals = await response.json();
+
+        // Remove old frontend goals
+        goals.length = 0;
+
+        // Add goals from PostgreSQL
+        goals.push(...backendGoals);
+
+        // Show them on the page
+        updateGoalList();
+
+        console.log(
+            "Goals loaded from backend:",
+            goals
+        );
+
+    } catch (error) {
+        console.error("Error loading goals:", error);
+        alert("Could not load goals from the backend.");
+    }
+}
+
 async function loadBudgets() {
     try {
         const response = await fetch(
@@ -1141,4 +1359,5 @@ async function loadBudgets() {
 // Load backend data when AligeIQ opens
 loadTransactions();
 loadBudgets();
+loadGoals();
 
