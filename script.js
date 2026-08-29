@@ -1,11 +1,21 @@
 console.log("AligeIQ JavaScript is connected!");
-const currentUser = JSON.parse(
+let currentUser = JSON.parse(
     localStorage.getItem("currentUser")
 );
-if (!currentUser) {
-    console.error("No user is logged in");
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
 }
 
+if (!currentUser) {
+    console.log("No user is logged in");
+}
 // Load saved transactions from LocalStorage
 const savedTransactions = localStorage.getItem("transactions");
 
@@ -71,7 +81,8 @@ goalForm.addEventListener("submit", async function (event) {
                 body: JSON.stringify({
                     name: name,
                     targetAmount: targetAmount,
-                    savedAmount: savedAmount
+                    savedAmount: savedAmount,
+                    userId: currentUser.id
                     
                 })
             }
@@ -126,7 +137,8 @@ budgetForm.addEventListener("submit", async function (event) {
                 },
                 body: JSON.stringify({
                     category: category,
-                    amount: amount
+                    amount: amount,
+                    userId: currentUser.id
                 })
             }
         );
@@ -184,13 +196,15 @@ transactionForm.addEventListener("submit", async function (event) {
     const type = document.getElementById("type").value;
 
     // Create the new transaction object
-    const newTransaction = {
-        description: description,
-        category: category,
-        amount: amount,
-        date: date,
-        type: type
-    };
+
+const newTransaction = {
+    description: description,
+    category: category,
+    amount: amount,
+    date: date,
+    type: type,
+    userId: currentUser.id
+};
 
     try {
         // Send the transaction to the backend
@@ -337,11 +351,11 @@ if (!matchesSearch || !matchesType) {
             transaction.type === "income" ? "+" : "-";
 
         transactionList.innerHTML += `
-            <div class="transaction-item">
-                <div>
-                    <h3>${transaction.description}</h3>
-                    <p>${transaction.category} · ${transaction.date}</p>
-                </div>
+    <div class="transaction-item">
+        <div>
+            <h3>${transaction.description}</h3>
+            <p>${transaction.category} · ${formatDate(transaction.date)}</p>
+        </div>
 
                 <div class="transaction-actions">
                     <span>${sign}₹${transaction.amount.toLocaleString("en-IN")}</span>
@@ -374,7 +388,7 @@ function updateCategoryAnalysis() {
             }
 
             // Add the expense amount to that category
-            categoryTotals[transaction.category] += transaction.amount;
+            categoryTotals[transaction.category] += Number(transaction.amount);
         }
     }
 
@@ -745,9 +759,10 @@ async function editBudget(id) {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    category: updatedCategory,
-                    amount: updatedAmount
-                })
+    category: updatedCategory,
+    amount: updatedAmount,
+    userId: currentUser.id
+})
             }
         );
 
@@ -795,11 +810,11 @@ async function deleteBudget(id, category) {
 
     try {
         const response = await fetch(
-            `http://localhost:3000/api/budgets/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
+    `http://localhost:3000/api/budgets/${id}?userId=${currentUser.id}`,
+    {
+        method: "DELETE"
+    }
+);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -902,12 +917,18 @@ async function deleteGoal(id, name) {
     }
 
     try {
-        const response = await fetch(
-            `http://localhost:3000/api/goals/${id}`,
-            {
-                method: "DELETE"
-            }
-        );
+       const response = await fetch(
+        `http://localhost:3000/api/goals/${id}`,
+    {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            userId: currentUser.id
+        })
+    }
+);
 
         if (!response.ok) {
             throw new Error("Could not delete goal");
@@ -970,11 +991,12 @@ async function editGoal(id) {
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    targetAmount: Number(targetAmount),
-                    savedAmount: Number(savedAmount)
-                })
+               body: JSON.stringify({
+    name: name.trim(),
+    targetAmount: Number(targetAmount),
+    savedAmount: Number(savedAmount),
+    userId: currentUser.id
+})
             }
         );
 
@@ -1063,7 +1085,7 @@ async function addSavings(id) {
 async function editTransaction(id) {
     // Find the transaction we want to edit
     const transaction = transactions.find(
-        transaction => transaction.id === id
+        transaction => Number(transaction.id) === Number(id)
     );
 
     // Stop if it doesn't exist
@@ -1088,31 +1110,31 @@ async function editTransaction(id) {
     );
 
     // Stop if the user cancels
-    if (description === null || category === null || amount === null) {
+    if (
+        description === null ||
+        category === null ||
+        amount === null
+    ) {
         return;
     }
 
-    // Create the updated transaction
-    const updatedTransaction = {
-        description: description,
-        category: category,
-        amount: Number(amount),
-        date: transaction.date,
-        type: transaction.type
-    };
-
     try {
-        // Send the updated transaction to the backend
+        // Send updated transaction to backend
         const response = await fetch(
-            `http://localhost:3000/api/transactions?userId=${currentUser.id}`,
+            `http://localhost:3000/api/transactions/${id}`,
             {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    updatedTransaction,
-                userId: currentUser.id})
+                    description: description.trim(),
+                    category: category.trim(),
+                    amount: Number(amount),
+                    date: transaction.date,
+                    type: transaction.type,
+                    userId: currentUser.id
+                })
             }
         );
 
@@ -1120,20 +1142,21 @@ async function editTransaction(id) {
             throw new Error("Could not update transaction");
         }
 
-        // Get the updated transaction back from the backend
+        // Get updated transaction from PostgreSQL
         const savedTransaction = await response.json();
 
-        // Find it in the frontend array
+        // Find transaction in frontend array
         const transactionIndex = transactions.findIndex(
-            transaction => transaction.id === id
+            transaction =>
+                Number(transaction.id) === Number(id)
         );
 
-        // Replace the old transaction with the backend version
+        // Replace old transaction
         if (transactionIndex !== -1) {
             transactions[transactionIndex] = savedTransaction;
         }
 
-        // Refresh everything
+        // Refresh dashboard
         updateDashboard();
         updateTransactionList();
         updateCategoryAnalysis();
@@ -1309,7 +1332,7 @@ async function loadTransactions() {
 async function loadGoals() {
     try {
         const response = await fetch(
-            "http://localhost:3000/api/goals"
+            `http://localhost:3000/api/goals?user_id=${currentUser.id}`
         );
 
         if (!response.ok) {
@@ -1341,7 +1364,7 @@ async function loadGoals() {
 async function loadBudgets() {
     try {
         const response = await fetch(
-            "http://localhost:3000/api/budgets"
+            `http://localhost:3000/api/budgets?user_id=${currentUser.id}`
         );
 
         console.log("Budget response status:", response.status);
@@ -1369,10 +1392,13 @@ async function loadBudgets() {
 }
 
 // Load backend data when AligeIQ opens
-loadTransactions();
-loadBudgets();
-loadGoals();
-
+if (currentUser) {
+    loadTransactions();
+    loadBudgets();
+    loadGoals();
+} else {
+    console.log("No user is logged in");
+}
 // ================================
 // SIGNUP
 // ================================
@@ -1505,21 +1531,28 @@ loginForm.addEventListener("submit", async (event) => {
             );
         }
 
-        // Save the logged-in user
+       // Save and update the logged-in user
+currentUser = data.user;
+
 localStorage.setItem(
-    "loggedInUser",
-    JSON.stringify(data.user)
+    "currentUser",
+    JSON.stringify(currentUser)
 );
 
-alert(`Welcome back, ${data.user.name}!`);
+alert(`Welcome back, ${currentUser.name}!`);
 
-console.log("Logged in user:", data.user);
+console.log("Logged in user:", currentUser);
 
 // Clear the login form
 loginForm.reset();
 
 // Open the AligeIQ application
 showApp();
+
+// Load the new user's data
+await loadTransactions();
+await loadBudgets();
+await loadGoals();
 
     } catch (error) {
         console.error("Login error:", error);
@@ -1560,9 +1593,10 @@ function showAuth() {
 
 
 // Check whether a user was already logged in
-const savedUser = localStorage.getItem("loggedInUser");
+const savedUser = localStorage.getItem("currentUser");
 
 if (savedUser) {
+    currentUser = JSON.parse(savedUser);
     showApp();
 } else {
     showAuth();
@@ -1572,7 +1606,10 @@ if (savedUser) {
 // Logout
 logoutButton.addEventListener("click", () => {
     // Remove the saved login
-    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("currentUser");
+
+    // Clear the current user
+    currentUser = null;
 
     // Return to authentication
     showAuth();

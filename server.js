@@ -18,14 +18,14 @@ app.use(cors());
 
 // Allow the backend to read JSON data sent by the frontend
 app.use(express.json());
-
+require("dotenv").config();
 // Connect to the AligeIQ PostgreSQL database
 const pool = new Pool({
-    user: "postgres",
-    host: "localhost",
-    database: "aligeiq",
-    password: "sqlminny",
-    port: 5432
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT
 });
 
 // Choose the port where our backend will run
@@ -235,39 +235,49 @@ app.get("/api/transactions", async (req, res) => {
     }
 });
 
-// API route to get all budgets from PostgreSQL
 app.get("/api/budgets", async (req, res) => {
     try {
-        // Read all budgets from the database
+        const { user_id } = req.query;
+
         const result = await pool.query(
-            "SELECT * FROM budgets ORDER BY id ASC"
+            "SELECT * FROM budgets WHERE user_id = $1 ORDER BY id DESC",
+            [user_id]
         );
 
-        // Send the budget rows to the frontend
         res.json(result.rows);
 
     } catch (error) {
-        console.error("Database error:", error);
-
+        console.error("Error getting budgets:", error);
         res.status(500).json({
-            message: "Could not fetch budgets"
+            message: "Could not load budgets"
         });
     }
 });
 
-
 // API route to add a budget to PostgreSQL
 app.post("/api/budgets", async (req, res) => {
     try {
-        // Get budget data sent by the frontend
-        const { category, amount } = req.body;
+        // Get budget data from the frontend
+        const { category, amount, userId } = req.body;
 
-        // Insert the budget into PostgreSQL
+        // Make sure a user is provided
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
+        // Insert the budget with the user's ID
         const result = await pool.query(
-            `INSERT INTO budgets (category, amount)
-             VALUES ($1, $2)
+            `INSERT INTO budgets
+             (category, amount, user_id)
+             VALUES ($1, $2, $3)
              RETURNING *`,
-            [category, amount]
+            [
+                category,
+                amount,
+                userId
+            ]
         );
 
         // Send the newly created budget back
@@ -286,13 +296,27 @@ app.post("/api/budgets", async (req, res) => {
 app.delete("/api/budgets/:id", async (req, res) => {
     try {
         const budgetId = Number(req.params.id);
+        const userId = req.query.userId;
+
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
 
         const result = await pool.query(
-            "DELETE FROM budgets WHERE id = $1 RETURNING *",
-            [budgetId]
+            `DELETE FROM budgets
+             WHERE id = $1
+             AND user_id = $2
+             RETURNING *`,
+            [
+                budgetId,
+                userId
+            ]
         );
 
         // Stop if the budget does not exist
+        // or does not belong to this user
         if (result.rows.length === 0) {
             return res.status(404).json({
                 message: "Budget not found"
@@ -313,11 +337,23 @@ app.delete("/api/budgets/:id", async (req, res) => {
     }
 });
 
-// API route to get all goals from PostgreSQL
+// API route to get goals for the logged-in user
 app.get("/api/goals", async (req, res) => {
     try {
+        const { user_id } = req.query;
+
+        if (!user_id) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
-            "SELECT * FROM goals ORDER BY id ASC"
+            `SELECT *
+             FROM goals
+             WHERE user_id = $1
+             ORDER BY id ASC`,
+            [user_id]
         );
 
         res.json(result.rows);
@@ -335,14 +371,30 @@ app.get("/api/goals", async (req, res) => {
 // API route to add a new goal to PostgreSQL
 app.post("/api/goals", async (req, res) => {
     try {
-        const { name, targetAmount, savedAmount } = req.body;
+        const {
+            name,
+            targetAmount,
+            savedAmount,
+            userId
+        } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
 
         const result = await pool.query(
             `INSERT INTO goals
-            (name, target_amount, saved_amount)
-            VALUES ($1, $2, $3)
+            (name, target_amount, saved_amount, user_id)
+            VALUES ($1, $2, $3, $4)
             RETURNING *`,
-            [name, targetAmount, savedAmount]
+            [
+                name,
+                targetAmount,
+                savedAmount,
+                userId
+            ]
         );
 
         res.status(201).json(result.rows[0]);
@@ -357,19 +409,36 @@ app.post("/api/goals", async (req, res) => {
 });
 
 app.put("/api/budgets/:id", async (req, res) => {
-    const { category, amount } = req.body;
+    const {
+        category,
+        amount,
+        userId
+    } = req.body;
+
     const { id } = req.params;
 
     try {
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
             `
             UPDATE budgets
             SET category = $1,
                 amount = $2
             WHERE id = $3
+              AND user_id = $4
             RETURNING *
             `,
-            [category, amount, id]
+            [
+                category,
+                amount,
+                id,
+                userId
+            ]
         );
 
         if (result.rows.length === 0) {
@@ -394,15 +463,22 @@ app.put("/api/budgets/:id", async (req, res) => {
 
 app.delete("/api/goals/:id", async (req, res) => {
     const { id } = req.params;
+    const { userId } = req.body;
 
     try {
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
             `
             DELETE FROM goals
-            WHERE id = $1
+            WHERE id = $1 AND user_id = $2
             RETURNING *
             `,
-            [id]
+            [id, userId]
         );
 
         if (result.rows.length === 0) {
@@ -432,12 +508,19 @@ app.put("/api/goals/:id", async (req, res) => {
     const {
         name,
         targetAmount,
-        savedAmount
+        savedAmount,
+        userId
     } = req.body;
 
     const { id } = req.params;
 
     try {
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required"
+            });
+        }
+
         const result = await pool.query(
             `
             UPDATE goals
@@ -445,13 +528,15 @@ app.put("/api/goals/:id", async (req, res) => {
                 target_amount = $2,
                 saved_amount = $3
             WHERE id = $4
+              AND user_id = $5
             RETURNING *
             `,
             [
                 name,
                 targetAmount,
                 savedAmount,
-                id
+                id,
+                userId
             ]
         );
 
