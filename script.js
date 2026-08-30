@@ -72,7 +72,7 @@ goalForm.addEventListener("submit", async function (event) {
 
     try {
         const response = await fetch(
-            "http://localhost:3000/api/goals",
+            "https://aligeiq.onrender.com/api/goals",
             {
                 method: "POST",
                 headers: {
@@ -129,7 +129,7 @@ budgetForm.addEventListener("submit", async function (event) {
     try {
         // Send the new budget to the backend
         const response = await fetch(
-            "http://localhost:3000/api/budgets",
+            "https://aligeiq.onrender.com/api/budgets",
             {
                 method: "POST",
                 headers: {
@@ -209,7 +209,7 @@ const newTransaction = {
     try {
         // Send the transaction to the backend
         const response = await fetch(
-            `http://localhost:3000/api/transactions?userId=${currentUser.id}`,
+            `https://aligeiq.onrender.com/api/transactions?userId=${currentUser.id}`,
             {
                 method: "POST",
                 headers: {
@@ -752,7 +752,7 @@ async function editBudget(id) {
 
     try {
         const response = await fetch(
-            `http://localhost:3000/api/budgets/${id}`,
+            `https://aligeiq.onrender.com/api/budgets/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -810,7 +810,7 @@ async function deleteBudget(id, category) {
 
     try {
         const response = await fetch(
-    `http://localhost:3000/api/budgets/${id}?userId=${currentUser.id}`,
+    `https://aligeiq.onrender.com/api/budgets/${id}?userId=${currentUser.id}`,
     {
         method: "DELETE"
     }
@@ -918,7 +918,7 @@ async function deleteGoal(id, name) {
 
     try {
        const response = await fetch(
-        `http://localhost:3000/api/goals/${id}`,
+        `https://aligeiq.onrender.com/api/goals/${id}`,
     {
         method: "DELETE",
         headers: {
@@ -985,7 +985,7 @@ async function editGoal(id) {
 
     try {
         const response = await fetch(
-            `http://localhost:3000/api/goals/${id}`,
+            `https://aligeiq.onrender.com/api/goals/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -1045,7 +1045,7 @@ async function addSavings(id) {
 
     try {
         const response = await fetch(
-            `http://localhost:3000/api/goals/${id}`,
+            `https://aligeiq.onrender.com/api/goals/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -1121,7 +1121,7 @@ async function editTransaction(id) {
     try {
         // Send updated transaction to backend
         const response = await fetch(
-            `http://localhost:3000/api/transactions/${id}`,
+            `https://aligeiq.onrender.com/api/transactions/${id}`,
             {
                 method: "PUT",
                 headers: {
@@ -1179,7 +1179,7 @@ async function deleteTransaction(id) {
     try {
         // Ask the backend to delete this transaction
         const response = await fetch(
-            `http://localhost:3000/api/transactions/${id}?userId=${currentUser.id}`,
+            `https://aligeiq.onrender.com/api/transactions/${id}?userId=${currentUser.id}`,
             {
                 method: "DELETE"
             }
@@ -1289,7 +1289,7 @@ async function loadTransactions() {
     try {
         // Ask the backend for all transactions
         const response = await fetch(
-            `http://localhost:3000/api/transactions?userId=${currentUser.id}`
+            `https://aligeiq.onrender.com/api/transactions?userId=${currentUser.id}`
         );
 
         // Check whether the request worked
@@ -1332,7 +1332,7 @@ async function loadTransactions() {
 async function loadGoals() {
     try {
         const response = await fetch(
-            `http://localhost:3000/api/goals?user_id=${currentUser.id}`
+            `https://aligeiq.onrender.com/api/goals?user_id=${currentUser.id}`
         );
 
         if (!response.ok) {
@@ -1364,7 +1364,7 @@ async function loadGoals() {
 async function loadBudgets() {
     try {
         const response = await fetch(
-            `http://localhost:3000/api/budgets?user_id=${currentUser.id}`
+            `https://aligeiq.onrender.com/api/budgets?user_id=${currentUser.id}`
         );
 
         console.log("Budget response status:", response.status);
@@ -1424,7 +1424,7 @@ signupForm.addEventListener("submit", async (event) => {
 
     try {
         const response = await fetch(
-            "http://localhost:3000/api/register",
+            "https://aligeiq.onrender.com/api/register",
             {
                 method: "POST",
                 headers: {
@@ -1510,7 +1510,7 @@ loginForm.addEventListener("submit", async (event) => {
 
     try {
         const response = await fetch(
-            "http://localhost:3000/api/login",
+            "https://aligeiq.onrender.com/api/login",
             {
                 method: "POST",
                 headers: {

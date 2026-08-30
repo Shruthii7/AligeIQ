@@ -1,0 +1,941 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #4f46e5;
+    --primary-dark: #3730a3;
+    --primary-light: #eef2ff;
+
+    --background: #f8fafc;
+    --surface: #ffffff;
+
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+
+    --border: #e2e8f0;
+
+    --income: #16a34a;
+    --expense: #dc2626;
+
+    --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: var(--background);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 40px;
+}
+header h1 {
+    font-size: 32px;
+    margin-bottom: 6px;
+}
+
+header p {
+    font-size: 16px;
+    color: #6b7280;
+}
+
+nav {
+    display: flex;
+    gap: 24px;
+}
+
+nav a {
+    color: #374151;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+main {
+    padding: 20px 40px 40px;
+}
+
+.dashboard-heading {
+    margin-bottom: 24px;
+}
+
+.dashboard-heading h2 {
+    font-size: 28px;
+    margin-bottom: 6px;
+}
+
+.dashboard-heading p {
+    color: #6b7280;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.card p {
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.card h3 {
+    font-size: 26px;
+}
+
+nav a {
+    padding-bottom: 6px;
+    border-bottom: 2px solid transparent;
+}
+
+nav a.active {
+    color: #1f2937;
+    font-weight: 600;
+    border-bottom-color: #1f2937;
+}
+
+.recent-transactions {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-heading h2 {
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.section-heading p {
+    color: #6b7280;
+}
+
+.section-heading button {
+    border: none;
+    background-color: transparent;
+    color: #374151;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.transaction-item h3 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.transaction-item p {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.transaction-item span {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.add-transaction {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+/* Arrange form fields in 2 columns */
+#transaction-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* Keep each label and input together */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Style both text/number inputs and the dropdown */
+.form-group input,
+.form-group select {
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+/* Style the Add Transaction button */
+#transaction-form button {
+    grid-column: span 2;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1f2937;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    nav {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    main {
+        padding: 20px;
+    }
+
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .section-heading {
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .transaction-item {
+        gap: 16px;
+    }
+
+    /* Make the transaction form one column on mobile */
+    #transaction-form {
+        grid-template-columns: 1fr;
+    }
+
+    /* Button takes the single available column */
+    #transaction-form button {
+        grid-column: 1;
+    }
+
+    #budget-form {
+    grid-template-columns: 1fr;
+}
+
+#budget-form button {
+    grid-column: 1;
+}
+}
+
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-heading {
+        flex-direction: column;
+    }
+}
+
+.transaction-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.transaction-actions button {
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: white;
+    cursor: pointer;
+}
+
+/* Search and filter area */
+.transaction-controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* Search input and filter dropdown */
+.transaction-controls input,
+.transaction-controls select {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Let search take the remaining space */
+.transaction-controls input {
+    flex: 1;
+}
+
+@media (max-width: 480px) {
+    .transaction-controls {
+        flex-direction: column;
+    }
+}
+
+.category-analysis {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.category-item:last-child {
+    border-bottom: none;
+}
+
+.category-item p {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* Keep the chart at a reasonable dashboard size */
+.chart-container {
+    max-width: 500px;
+    height: 350px;
+    margin: 30px auto;
+}
+
+.monthly-analysis {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+.financial-insights {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+.insight-item {
+    padding: 16px;
+    background-color: #f5f7fb;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.insight-item:last-child {
+    margin-bottom: 0;
+}
+
+.budget-section {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+#budget-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+#budget-form button {
+    grid-column: span 2;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1f2937;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.budget-item {
+    padding: 18px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.budget-item:last-child {
+    border-bottom: none;
+}
+
+.budget-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.budget-details {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.budget-progress {
+    width: 100%;
+    height: 10px;
+    background-color: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.budget-progress-bar {
+    height: 100%;
+    background-color: #1f2937;
+    border-radius: 10px;
+}
+.budget-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.delete-budget-btn {
+    border: none;
+    background-color: transparent;
+    color: #b91c1c;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.budget-alert {
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.goals-section {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+#goal-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+#goal-form button {
+    grid-column: span 2;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #1f2937;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.goal-item {
+    padding: 18px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.goal-item:last-child {
+    border-bottom: none;
+}
+
+.goal-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.goal-details {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.goal-progress {
+    width: 100%;
+    height: 10px;
+    background-color: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.goal-progress-bar {
+    height: 100%;
+    background-color: #1f2937;
+    border-radius: 10px;
+}
+
+.delete-goal-btn {
+    border: none;
+    background-color: transparent;
+    color: #b91c1c;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.goal-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.add-savings-btn {
+    border: none;
+    background-color: transparent;
+    color: #1f2937;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Add clear separation between major sections */
+.budgets-section,
+.goals-section {
+    background-color: #ffffff;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 12px;
+}
+
+/* Give the budget list some breathing room */
+#budget-list {
+    margin-top: 24px;
+}
+
+/* Add space around each budget item */
+.budget-item {
+    padding: 20px 0;
+}
+
+/* =========================
+   WEBSITE FOOTER
+========================= */
+
+.site-footer {
+    background-color: #1f2937;
+    color: white;
+    margin-top: 60px;
+    padding: 50px 40px 20px;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 50px;
+}
+
+.footer-brand h2,
+.footer-info h3,
+.footer-contact h3 {
+    margin-bottom: 12px;
+}
+
+.footer-brand h2 {
+    font-size: 26px;
+}
+
+.footer-brand p,
+.footer-info p,
+.footer-contact p {
+    color: #cbd5e1;
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.footer-links {
+    display: flex;
+    gap: 16px;
+    margin-top: 15px;
+}
+
+.footer-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 35px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid #475569;
+    text-align: center;
+}
+
+.footer-bottom p {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Footer on mobile */
+@media (max-width: 768px) {
+    .site-footer {
+        padding: 40px 20px 20px;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+}
+
+/* Give major sections a consistent card appearance */
+.add-transaction,
+.category-analysis,
+.monthly-analysis,
+.financial-insights,
+.budgets-section,
+.goals-section {
+    background-color: #ffffff;
+    padding: 28px;
+    border-radius: 16px;
+}
+
+/* Consistent button interactions */
+button {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Make small action buttons consistent */
+.edit-btn,
+.delete-btn,
+.add-savings-btn {
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.edit-btn:hover,
+.delete-btn:hover,
+.add-savings-btn:hover {
+    transform: translateY(-1px);
+    opacity: 0.85;
+}
+
+/* Transaction action buttons */
+.edit-btn,
+.delete-btn {
+    padding: 8px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.edit-btn:hover {
+    border-color: #374151;
+}
+
+.delete-btn {
+    color: #b91c1c;
+}
+
+.delete-btn:hover {
+    border-color: #b91c1c;
+}
+
+/* Search and filter controls */
+.transaction-controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.transaction-controls input,
+.transaction-controls select {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #ffffff;
+}
+
+.transaction-controls input {
+    flex: 1;
+}
+
+.transaction-controls select {
+    min-width: 160px;
+}
+
+@media (max-width: 480px) {
+    .transaction-controls {
+        flex-direction: column;
+    }
+
+    .transaction-controls select {
+        width: 100%;
+    }
+}
+
+/* Highlight form fields when the user is typing */
+.form-group input:focus,
+.form-group select:focus,
+.transaction-controls input:focus,
+.transaction-controls select:focus {
+    outline: none;
+    border-color: #374151;
+    box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+}
+
+@media (max-width: 480px) {
+    /* Stack transaction details more comfortably on mobile */
+    .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Keep action buttons neatly grouped */
+    .transaction-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Give KPI cards comfortable padding on small screens */
+    .card {
+        padding: 18px;
+    }
+
+    .card h3 {
+        font-size: 22px;
+    }
+
+    /* Reduce padding inside large sections on mobile */
+    .recent-transactions,
+    .add-transaction,
+    .category-analysis,
+    .monthly-analysis,
+    .financial-insights,
+    .budgets-section,
+    .goals-section {
+        padding: 20px;
+    }
+
+    /* Keep section headings readable */
+    .dashboard-heading h2 {
+        font-size: 24px;
+    }
+}
+
+/* Message shown when a section has no data */
+.empty-state {
+    padding: 20px 0;
+    color: #6b7280;
+    text-align: center;
+}
+
+/* Goal and budget cards */
+.goal-item,
+.budget-item {
+    padding: 24px;
+    margin-top: 20px;
+    border: 1px solid #d8dee8;
+    border-radius: 12px;
+    background-color: #ffffff;
+}
+
+/* Name and action buttons on one row */
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
+.item-header h3 {
+    margin: 0;
+}
+
+/* Button container */
+.item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Common action button styling */
+.action-button {
+    border: none;
+    padding: 9px 18px;
+    border-radius: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+/* Edit button */
+.edit-button {
+    background-color: #e8eef7;
+    color: #27364a;
+}
+
+/* Delete button */
+.delete-button {
+    background-color: #fce8e8;
+    color: #b42318;
+}
+
+/* Hover effect */
+.action-button:hover {
+    transform: translateY(-1px);
+    opacity: 0.85;
+}
+
+.goal-item .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.goal-item .item-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+/* Individual financial goal card */
+.goal-item {
+    background-color: #ffffff;
+    border: 1px solid #d9dee7;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-top: 30px;
+}
+
+/* Top section of the goal */
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+/* Goal heading */
+.goal-header h3 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+}
+
+/* Saved and target amount */
+.goal-amount {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Keep buttons together */
+.goal-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* Shared action button styling */
+.action-button {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+/* Edit button */
+.edit-button {
+    background-color: #e8edf5;
+    color: #2d3b4e;
+}
+
+.edit-button:hover {
+    transform: translateY(-1px);
+}
+
+/* Delete button */
+.delete-button {
+    background-color: #f9e3e3;
+    color: #a33a3a;
+}
+
+.delete-button:hover {
+    transform: translateY(-1px);
+}
+
+/* Progress section */
+.goal-item .progress-bar {
+    margin-top: 20px;
+}
+
+/* Percentage text */
+.goal-percentage {
+    margin: 8px 0 0 0;
+}
