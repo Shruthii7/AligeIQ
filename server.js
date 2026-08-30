@@ -21,15 +21,14 @@ app.use(express.json());
 require("dotenv").config();
 // Connect to the AligeIQ PostgreSQL database
 const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // Choose the port where our backend will run
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Create a test API route
 app.get("/", (req, res) => {
